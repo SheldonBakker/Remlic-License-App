@@ -1,0 +1,23 @@
+# robots.txt for RemLic
+
+User-agent: *
+Allow: /
+Allow: /price
+Allow: /documentation
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+
+# Protect authentication and user-specific routes
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /manage
+Disallow: /reminder-settings
+Disallow: /emailconfirmed
+
+# Allow crawling of sitemap
+Sitemap: https://remlic.co.za/sitemap.xml
+
+# Crawl-delay for rate limiting (in seconds)
+Crawl-delay: 1
