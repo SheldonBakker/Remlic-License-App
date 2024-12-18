@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export interface License {
+export interface Contract {
   id: string;
   user_id: string;
   expiry_date: string;
@@ -8,22 +8,31 @@ export interface License {
 }
 
 export interface LicenseGroup {
-  vehicles: License[];
-  drivers: License[];
-  firearms: License[];
-  prpds: License[];
-  works: License[];
-  others: License[];
-  passports: License[];
-  tvlicenses: License[];
+  [key: string]: Contract[];
+  drivers: Contract[];
+  vehicles: Contract[];
+  firearms: Contract[];
+  works: Contract[];
+  prpds: Contract[];
+  passports: Contract[];
+  tvlicenses: Contract[];
+  others: Contract[];
 }
 
 export type LicenseType =
   | "vehicles"
   | "drivers"
   | "firearms"
-  | "prpds"
+  | "prpd"
   | "works"
   | "others"
   | "passports"
   | "tvlicenses";
+
+export interface License {
+  id: string;
+  type: 'vehicles' | 'drivers' | 'firearms' | 'prpd' | 'works' | 'other_documents' | 'passports' | 'tv_licenses';
+  first_name?: string;
+  last_name?: string;
+  // ... other existing properties
+}

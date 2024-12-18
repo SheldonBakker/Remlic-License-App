@@ -18,6 +18,7 @@ import {
   FiEye,
   FiEyeOff,
   FiShield,
+  FiUsers,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -138,6 +139,15 @@ interface TOTPFactor {
   type: 'totp';
   totp: { qr_code: string; secret: string; uri: string; };
 }
+
+// Add this helper function near the top of the file
+const getAvatarUrl = (url?: string, email?: string) => {
+  if (url) {
+    return url;
+  }
+  // Fallback to DiceBear avatar
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${email || 'default'}`;
+};
 
 const Profile = () => {
   const { user, loading: userLoading } = useUser();
@@ -774,24 +784,16 @@ const Profile = () => {
         <div className="bg-[#1f2937]/30 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-indigo-500/20">
           <div className="bg-[#1f2937]/30 backdrop-blur-xl px-6 sm:px-8 py-8 sm:py-10 border-b border-indigo-500/20">
             <div className="flex flex-col sm:flex-row items-center sm:space-x-6">
-              <div className="h-24 w-24 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm mb-4 sm:mb-0 border border-indigo-400/30 relative group">
-                {state.profile.avatar_url ? (
-                  <img
-                    src={state.profile.avatar_url}
-                    alt="Profile"
-                    className="h-24 w-24 rounded-full"
-                  />
-                ) : (
-                  <img
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${state.profile.email}`}
-                    alt="Profile"
-                    className="h-24 w-24 rounded-full"
-                  />
-                )}
+              <div className="h-24 w-24 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm mb-4 sm:mb-0 border border-indigo-400/30 relative group overflow-hidden">
+                <img
+                  src={getAvatarUrl(state.profile.avatar_url, state.profile.email)}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
                 
                 <button
                   onClick={() => document.getElementById('avatar-upload')?.click()}
-                  className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 
+                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 
                     transition-opacity duration-200 flex items-center justify-center text-white"
                 >
                   <FiEdit3 className="h-5 w-5" />
@@ -805,13 +807,12 @@ const Profile = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      setState(prev => ({ ...prev, avatarFile: file }));
                       handleAvatarUpdate(file);
                     }
                   }}
                 />
                 {state.uploadingAvatar && (
-                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                     <FiLoader className="h-5 w-5 text-white animate-spin" />
                   </div>
                 )}
@@ -823,26 +824,42 @@ const Profile = () => {
                 <p className="text-white/70 mt-1 font-medium">
                   ID: {state.profile.id_number}
                 </p>
-                {state.isMfaEnabled ? (
-                  <span className="mt-3 inline-flex items-center px-4 py-2 rounded-lg
-                    bg-green-500/20 text-green-400 font-medium text-sm">
-                    <FiShield className="h-4 w-4 mr-2" />
-                    2FA Enabled
-                  </span>
-                ) : (
-                  <button
-                    onClick={setupMfa}
-                    className="mt-3 inline-flex items-center px-4 py-2 rounded-lg
-                      bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700
-                      border border-blue-400/50 hover:border-blue-400/70
-                      text-white font-medium text-sm transition-all duration-200
-                      shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30
-                      transform hover:scale-[1.02]"
-                  >
-                    <FiShield className="h-4 w-4 mr-2" />
-                    <span>Enable 2FA</span>
-                  </button>
-                )}
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {state.isMfaEnabled ? (
+                    <span className="inline-flex items-center px-4 py-2 rounded-lg
+                      bg-green-500/20 text-green-400 font-medium text-sm">
+                      <FiShield className="h-4 w-4 mr-2" />
+                      2FA Enabled
+                    </span>
+                  ) : (
+                    <button
+                      onClick={setupMfa}
+                      className="inline-flex items-center px-4 py-2 rounded-lg
+                        bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700
+                        border border-blue-400/50 hover:border-blue-400/70
+                        text-white font-medium text-sm transition-all duration-200
+                        shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30
+                        transform hover:scale-[1.02]"
+                    >
+                      <FiShield className="h-4 w-4 mr-2" />
+                      <span>Enable 2FA</span>
+                    </button>
+                  )}
+                  {state.profile.type_of_user === "admin" && (
+                    <button
+                      onClick={() => navigate("/admin")}
+                      className="inline-flex items-center px-4 py-2 rounded-lg
+                        bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700
+                        border border-purple-400/50 hover:border-purple-400/70
+                        text-white font-medium text-sm transition-all duration-200
+                        shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30
+                        transform hover:scale-[1.02]"
+                    >
+                      <FiUsers className="h-4 w-4 mr-2" />
+                      <span>Admin Panel</span>
+                    </button>
+                  )}
+                </div>
               </div>
               {(state.profile.type_of_user === "registered" ||
                 state.profile.subscription_status === "expired" ||

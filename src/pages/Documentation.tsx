@@ -1,11 +1,6 @@
 import {
-  FiCreditCard,
-  FiTruck,
-  FiTarget,
-  FiBriefcase,
   FiRefreshCw,
   FiTrash2,
-  FiFile,
   FiPlus,
   FiMail,
   FiActivity,
@@ -17,79 +12,18 @@ import {
   FiFileText,
   FiStar,
   FiHelpCircle,
-  FiTv,
 } from "react-icons/fi";
-import { MdDirectionsCar } from "react-icons/md";
 import StructuredData from "../components/StructuredData";
-import Head from "next/head";
-import React from "react";
+import * as React from "react";
+import { Helmet } from 'react-helmet';
 import { Link as ScrollLink } from 'react-scroll';
+import { LICENSE_TYPES } from '../constants/licenses';
 
 const Documentation = () => {
-  const licenseTypes = [
-    {
-      id: "drivers",
-      title: "Driver's License",
-      description: "Track and manage your driver's license renewals",
-      icon: <FiCreditCard className="h-6 w-6" />,
-      fields: ["First Name", "Last Name", "ID Number", "Expiry Date"],
-    },
-    {
-      id: "vehicle",
-      title: "Vehicle Registration",
-      description: "Monitor vehicle license disk renewals",
-      icon: <MdDirectionsCar className="h-6 w-6" />,
-      fields: ["Make", "Model", "Registration Number", "Expiry Date"],
-    },
-    {
-      id: "prpd",
-      title: "Professional Driving Permit (PrDP)",
-      description: "Manage professional driving permit renewals",
-      icon: <FiTruck className="h-6 w-6" />,
-      fields: ["First Name", "Last Name", "ID Number", "Expiry Date"],
-    },
-    {
-      id: "firearm",
-      title: "Firearm License",
-      description: "Track firearm license renewals",
-      icon: <FiTarget className="h-6 w-6" />,
-      fields: ["Make/Model", "Caliber", "Registration Number", "Expiry Date"],
-    },
-    {
-      id: "work",
-      title: "Work Contract",
-      description: "Monitor work contract expiry dates",
-      icon: <FiBriefcase className="h-6 w-6" />,
-      fields: [
-        "Contract Name",
-        "Contract Type",
-        "Company Name",
-        "Contact Details",
-        "Expiry Date",
-      ],
-    },
-    {
-      id: "other",
-      title: "Other Documents",
-      description: "Track any other important documents or licenses",
-      icon: <FiFile className="h-6 w-6" />,
-      fields: ["Description", "Document Type", "Expiry Date"],
-    },
-    {
-      id: "passport",
-      title: "Passport",
-      description: "Track and manage your passport renewals",
-      icon: <FiCreditCard className="h-6 w-6" />,
-      fields: ["First Name", "Last Name", "Passport Number", "Expiry Date"],
-    },
-    {
-      id: "tvlicense",
-      title: "TV License",
-      description: "Monitor your TV license renewals",
-      icon: <FiTv className="h-6 w-6" />,
-      fields: ["First Name", "Last Name", "License Number", "Expiry Date"],
-    },
-  ];
+  const licenseTypes = LICENSE_TYPES.map(type => ({
+    ...type,
+    icon: React.createElement(type.icon, { className: 'h-6 w-6' })
+  }));
 
   const notificationFeatures = [
     {
@@ -142,7 +76,7 @@ const Documentation = () => {
     },
   ];
 
-  const articleData = {
+  const articleData = React.useMemo(() => ({
     "@type": "Article",
     headline: "How to Use RemLic - License Management Documentation",
     author: {
@@ -167,9 +101,9 @@ const Documentation = () => {
       "@type": "WebPage",
       "@id": "https://remlic.co.za/documentation",
     },
-  };
+  }), []);
 
-  const breadcrumbData = {
+  const breadcrumbData = React.useMemo(() => ({
     items: [
       {
         "@type": "ListItem",
@@ -184,7 +118,7 @@ const Documentation = () => {
         item: "https://remlic.co.za/documentation",
       },
     ],
-  };
+  }), []);
 
   const navigationSections = [
     { 
@@ -240,7 +174,7 @@ const Documentation = () => {
 
   return (
     <>
-      <Head>
+      <Helmet>
         <title>
           RemLic Documentation: Complete Guide to License Management
         </title>
@@ -252,7 +186,7 @@ const Documentation = () => {
           name="keywords"
           content="license management, document tracking, driver's license renewal, vehicle registration, PrDP, firearm license, work contract"
         />
-      </Head>
+      </Helmet>
 
       <StructuredData type="article" data={articleData} />
       <StructuredData type="breadcrumb" data={breadcrumbData} />
@@ -411,7 +345,7 @@ const Documentation = () => {
                       Required Fields:
                     </p>
                     <ul className="list-disc list-inside text-white text-sm">
-                      {license.fields.map((field) => (
+                      {license.fields?.map((field) => (
                         <li key={field}>{field}</li>
                       ))}
                     </ul>
@@ -609,4 +543,4 @@ const Documentation = () => {
   );
 };
 
-export default Documentation;
+export default React.memo(Documentation);

@@ -6,7 +6,6 @@ $config = require_once('config.php');
 echo json_encode([
     'SUPABASE_URL' => $config['SUPABASE_URL'],
     'SUPABASE_ANON_KEY' => $config['SUPABASE_ANON_KEY'],
-
     'PAYSTACK_PUBLIC_KEY' => $config['PAYSTACK_PUBLIC_KEY'],
     'PAYSTACK_TIER1_PLAN_CODE' => $config['PAYSTACK_TIER1_PLAN_CODE'],
     'PAYSTACK_TIER2_PLAN_CODE' => $config['PAYSTACK_TIER2_PLAN_CODE'],

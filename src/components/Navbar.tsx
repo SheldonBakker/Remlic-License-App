@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Transition } from "@headlessui/react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -48,7 +47,7 @@ const Navbar = () => {
         const {
           data: { subscription },
         } = supabaseClient.auth.onAuthStateChange(
-          (_event: AuthChangeEvent, session: Session | null) => {
+          (_event, session) => {
             setIsLoggedIn(!!session);
             if (!session) {
               setUserType(null);

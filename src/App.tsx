@@ -13,7 +13,9 @@ import Footer from "./components/Footer";
 import { supabase } from "./lib/supabase.ts";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NotFound from "./pages/NotFound";
-import { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { AuthChangeEvent, Session } from "@supabase/gotrue-js";
+import Documentation from "./pages/Documentation";
+import { HelmetProvider } from 'react-helmet-async';
 
 const queryClient = new QueryClient();
 
@@ -22,24 +24,49 @@ const Home = lazy(() => import("./pages/Home.tsx"));
 const Login = lazy(() => import("./pages/Login.tsx"));
 const Register = lazy(() => import("./pages/Register.tsx"));
 const Profile = lazy(() => import("./pages/Profile.tsx"));
-const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
 const Contact = lazy(() => import("./pages/Contact.tsx"));
 const Terms = lazy(() => import("./components/Terms.tsx"));
 const Privacy = lazy(() => import("./components/Privacy.tsx"));
-const Documentation = lazy(() => import("./pages/Documentation.tsx"));
 const ReminderSettings = lazy(() => import("./pages/ReminderSettings.tsx"));
 const Price = lazy(() => import("./pages/Price.tsx"));
 const Emailconfirmed = lazy(() => import("./pages/Auth.tsx"));
-const Launch = lazy(() => import("./pages/Launch.tsx"));
+const Maintenance = lazy(() => import("./pages/Maintanence.tsx"));
+const Dashboard = lazy(() => import("./pages/Dash.tsx"));
+const Admin = lazy(() => import("./pages/Admin.tsx"));
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInMaintenance, setIsInMaintenance] = useState(false);
+
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      try {
+        const { data, error } = await (await supabase)
+          .from("system_settings")
+          .select("value")
+          .eq("key", "maintenance_mode");
+
+        if (error) throw error;
+        setIsInMaintenance(data?.[0]?.value || false);
+      } catch (error) {
+        console.error("Error checking maintenance:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkMaintenance();
+  }, []);
+
+  if (isLoading) return <LoadingSpinner text="Checking system status..." />;
+  if (isInMaintenance) return <Maintenance />;
+  return <>{children}</>;
+};
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const launchDate = useMemo(() => new Date("2025-01-16T00:00:00"), []);
-  const isBeforeLaunch = useMemo(() => new Date() < launchDate, [launchDate]);
-
-  // Update checkAuth to handle errors more gracefully
   const checkAuth = useCallback(async () => {
     try {
       const {
@@ -124,6 +151,16 @@ const App: React.FC = () => {
         ),
       },
       {
+        path: "/admin",
+        element: isAuthenticated ? (
+          <Suspense fallback={<LoadingSpinner text="Loading Admin..." />}>
+            <Admin />
+          </Suspense>
+        ) : (
+          <Navigate to="/login" />
+        ),
+      },
+      {
         path: "/terms",
         element: (
           <Suspense fallback={<LoadingSpinner text="Loading Terms..." />}>
@@ -141,13 +178,7 @@ const App: React.FC = () => {
       },
       {
         path: "/documentation",
-        element: (
-          <Suspense
-            fallback={<LoadingSpinner text="Loading Documentation..." />}
-          >
-            <Documentation />
-          </Suspense>
-        ),
+        element: <Documentation />,
       },
       {
         path: "/auth",
@@ -171,7 +202,9 @@ const App: React.FC = () => {
         path: "/dashboard",
         element: isAuthenticated ? (
           <Suspense fallback={<LoadingSpinner text="Loading Dashboard..." />}>
-            <Dashboard />
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
           </Suspense>
         ) : (
           <Navigate to="/login" />
@@ -179,21 +212,11 @@ const App: React.FC = () => {
       },
       {
         path: "/reminder-settings",
-        element: isAuthenticated ? (
+        element: (
           <Suspense
             fallback={<LoadingSpinner text="Loading Reminder Settings..." />}
           >
             <ReminderSettings />
-          </Suspense>
-        ) : (
-          <Navigate to="/login" />
-        ),
-      },
-      {
-        path: "/launch",
-        element: (
-          <Suspense fallback={<LoadingSpinner text="Loading Launch..." />}>
-            <Launch />
           </Suspense>
         ),
       },
@@ -205,7 +228,6 @@ const App: React.FC = () => {
     [isAuthenticated]
   );
 
-  // Add error boundary for loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex items-center justify-center">
@@ -215,25 +237,23 @@ const App: React.FC = () => {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex flex-col">
-        <Navbar />
-        <div className="flex-grow">
-          <Suspense fallback={<LoadingSpinner text="Loading..." />}>
-            <Routes>
-              {isBeforeLaunch ? (
-                <Route path="*" element={<Launch />} />
-              ) : (
-                routes.map(({ path, element }) => (
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex flex-col">
+          <Navbar />
+          <div className="flex-grow">
+            <Suspense fallback={<LoadingSpinner text="Loading..." />}>
+              <Routes>
+                {routes.map(({ path, element }) => (
                   <Route key={path} path={path} element={element} />
-                ))
-              )}
-            </Routes>
-          </Suspense>
+                ))}
+              </Routes>
+            </Suspense>
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 };
 

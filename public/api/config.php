@@ -10,7 +10,7 @@ if (!defined('SECURE_ACCESS')) {
 return [
     'PAYSTACK_PUBLIC_KEY' => 'pk_live_55224ba86e9b61916f80bc6a5e0e652bbf0b3659',
     'SUPABASE_URL' => 'https://ywlyafdtnbozflknjsip.supabase.co',
-    'SUPABASE_ANON_KEY' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bHlhZmR0bmJvemZsa25qc2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI3NjQ4MDQsImV4cCI6MjA0ODM0MDgwNH0.dWNf7EYpZeR5yyd52DLMR9P69upIVXKKZy42dNcAlz8',
+    'SUPABASE_ANON_KEY' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3bHlhZmR0bmJvemZsa25qc2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQxMzIyOTIsImV4cCI6MjA0OTcwODI5Mn0.iG92jkUL3ZLpNKMUH0KSp4vS6R4NME3bJlgsjiwAUcM',
     'PAYSTACK_TIER1_PLAN_CODE' => 'PLN_nomqaqstb06fi2q',
     'PAYSTACK_TIER2_PLAN_CODE' => 'PLN_ero7dmueata5z0k',
     'PAYSTACK_TIER3_PLAN_CODE' => 'PLN_5s45g09vhcqfnxh',

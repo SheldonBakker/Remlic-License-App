@@ -5,7 +5,11 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Import the default styles
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { supabase } from "../lib/supabase";
-import { AMREntry } from "@supabase/supabase-js";
+
+interface AMREntryExtended {
+  factor_id: string;
+  // Include other properties from AMREntry if needed
+}
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -48,11 +52,7 @@ const Login = () => {
           }
 
           // Retrieve the factorId from the first available authentication method
-          interface AMREntryExtended extends AMREntry {
-            factor_id: string;
-          }
-
-          const currentMethod = enrollments.currentAuthenticationMethods[0] as AMREntryExtended;
+          const currentMethod = enrollments.currentAuthenticationMethods[0] as unknown as AMREntryExtended;
           const factorId = currentMethod.factor_id;
 
           if (!factorId) {

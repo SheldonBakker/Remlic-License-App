@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { User, Session } from "@supabase/gotrue-js";
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,7 +23,7 @@ export function useUser() {
         // Set up the auth state change listener
         const {
           data: { subscription },
-        } = client.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+        } = client.auth.onAuthStateChange((_event: string, session: Session | null) => {
           setUser(session?.user ?? null);
         });
 

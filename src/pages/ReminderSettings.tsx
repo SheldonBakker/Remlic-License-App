@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -11,8 +9,8 @@ import { FiLoader, FiSave } from "react-icons/fi";
 
 interface License {
   id: string;
-  expiry_date: string
-  [key: string]: any;
+  expiry_date: string;
+  [key: string]: string | number | boolean | null;
 }
 
 type LicenseGroup = Record<LicenseType, License[]>;
@@ -29,7 +27,7 @@ const ReminderSettings = () => {
     vehicles: [],
     drivers: [],
     firearms: [],
-    prpds: [],
+    prpd: [],
     works: [],
     others: [],
     passports: [],
@@ -99,7 +97,7 @@ const ReminderSettings = () => {
     vehicles: false,
     drivers: false,
     firearms: false,
-    prpds: false,
+    prpd: false,
     works: false,
     others: false,
     passports: false,
@@ -110,51 +108,49 @@ const ReminderSettings = () => {
     vehicles: false,
     drivers: false,
     firearms: false,
-    prpds: false,
+    prpd: false,
     works: false,
     others: false,
     passports: false,
     tvlicenses: false,
   });
 
+  const userReceived = useRef(false);
+
   const fetchLicenseData = useCallback(async () => {
     if (!user?.id) return null;
     
-    try {
-      const client = await supabase;
-      const [
-        { data: vehicles },
-        { data: drivers },
-        { data: firearms },
-        { data: prpds },
-        { data: works },
-        { data: others },
-        { data: passports },
-        { data: tvlicenses },
-      ] = await Promise.all([
-        client.from("vehicles").select("*").eq("user_id", user.id),
-        client.from("drivers").select("*").eq("user_id", user.id),
-        client.from("firearms").select("*").eq("user_id", user.id),
-        client.from("prpd").select("*").eq("user_id", user.id),
-        client.from("works").select("*").eq("user_id", user.id),
-        client.from("other_documents").select("*").eq("user_id", user.id),
-        client.from("passports").select("*").eq("user_id", user.id),
-        client.from("tv_licenses").select("*").eq("user_id", user.id),
-      ]);
+    const client = await supabase;
+    const [
+      { data: vehicles },
+      { data: drivers },
+      { data: firearms },
+      { data: prpd },
+      { data: works },
+      { data: others },
+      { data: passports },
+      { data: tvlicenses },
+    ] = await Promise.all([
+      client.from("vehicles").select("*").eq("user_id", user.id),
+      client.from("drivers").select("*").eq("user_id", user.id),
+      client.from("firearms").select("*").eq("user_id", user.id),
+      client.from("prpd").select("*").eq("user_id", user.id),
+      client.from("works").select("*").eq("user_id", user.id),
+      client.from("other_documents").select("*").eq("user_id", user.id),
+      client.from("passports").select("*").eq("user_id", user.id),
+      client.from("tv_licenses").select("*").eq("user_id", user.id),
+    ]);
 
-      return {
-        vehicles: vehicles || [],
-        drivers: drivers || [],
-        firearms: firearms || [],
-        prpds: prpds || [],
-        works: works || [],
-        others: others || [],
-        passports: passports || [],
-        tvlicenses: tvlicenses || [],
-      };
-    } catch (error) {
-      throw new Error("Failed to fetch licenses");
-    }
+    return {
+      vehicles: vehicles || [],
+      drivers: drivers || [],
+      firearms: firearms || [],
+      prpd: prpd || [],
+      works: works || [],
+      others: others || [],
+      passports: passports || [],
+      tvlicenses: tvlicenses || [],
+    };
   }, [user?.id]);
 
   const fetchSettings = useCallback(async () => {
@@ -170,93 +166,66 @@ const ReminderSettings = () => {
     return settings;
   }, [user?.id]);
 
-  const checkSubscription = useCallback(async () => {
-    if (!user?.id) return false;
-
-    try {
-      setIsSubscriptionLoading(true);
-      const client = await supabase;
-
-      // Enhanced cache key with version for future updates
-      const cacheKey = `subscription_v1_${user.id}`;
-
-      // Check memory cache first (faster than sessionStorage)
-      const memoryCache = (window as any).__subscriptionCache?.[cacheKey];
-      if (memoryCache) {
-        const { isActive, timestamp } = memoryCache;
-        if (Date.now() - timestamp < 5 * 60 * 1000) {
-          setSubscriptionStatus(isActive ? "active" : "inactive");
-          return isActive;
-        }
-      }
-
-      const { data: profile, error } = await client
-        .from("profiles")
-        .select("subscription_status, subscription_end_date")
-        .eq("id", user.id)
-        .single();
-
-      if (error) throw error;
-
-      const isActive =
-        profile?.subscription_status === "active" &&
-        (!profile?.subscription_end_date ||
-          new Date(profile.subscription_end_date) > new Date());
-
-      // Update cache
-      const cacheData = { isActive, timestamp: Date.now() };
-      if (!(window as any).__subscriptionCache) {
-        (window as any).__subscriptionCache = {};
-      }
-      (window as any).__subscriptionCache[cacheKey] = cacheData;
-      sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
-
-      setSubscriptionStatus(isActive ? "active" : "inactive");
-      return isActive;
-    } catch (error) {
-      console.error("Error checking subscription:", error);
-      setSubscriptionStatus("inactive");
-      return false;
-    } finally {
-      setIsSubscriptionLoading(false);
-    }
-  }, [user?.id]);
-
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const initializeData = async () => {
       if (!user?.id) {
-        setError("Please sign in to access reminder settings");
-        navigate("/login");
+        timeoutId = setTimeout(async () => {
+          if (!userReceived.current) {
+            setError("Please sign in to access reminder settings");
+            navigate("/login");
+          }
+        }, 1000);
         return;
       }
 
+      userReceived.current = true;
+
       try {
-        // Use the enhanced subscription check
-        const isActive = await checkSubscription();
+        setIsSubscriptionLoading(true);
+        const client = await supabase;
+        
+        const { data: profile, error: profileError } = await client
+          .from("profiles")
+          .select("subscription_status, subscription_end_date, type_of_user")
+          .eq("id", user.id)
+          .single();
 
-        // Only fetch licenses and settings if user has active subscription
-        if (isActive) {
-          const [licenseData, settings] = await Promise.all([
-            fetchLicenseData().finally(() => setIsLicensesLoading(false)),
-            fetchSettings().finally(() => setIsSettingsLoading(false)),
-          ]);
+        if (profileError) throw profileError;
 
-          if (licenseData) setLicenses(licenseData);
+        if (profile?.type_of_user === 'registered') {
+          setSubscriptionStatus(profile?.subscription_status || "inactive");
+        } else {
+          setSubscriptionStatus("active");
+        }
+        setIsSubscriptionLoading(false);
 
-          if (settings) {
-            const settingsMap = settings.reduce(
-              (acc: any, setting: any) => ({
-                ...acc,
-                [setting.type]: {
-                  notifications_enabled: setting.notifications_enabled,
-                  reminder_days_before: setting.reminder_days_before,
-                  reminder_frequency: setting.reminder_frequency,
-                },
-              }),
-              {}
-            );
-            setTypeSettings(settingsMap);
-          }
+        const [licenseData, settings] = await Promise.all([
+          fetchLicenseData().finally(() => setIsLicensesLoading(false)),
+          fetchSettings().finally(() => setIsSettingsLoading(false)),
+        ]);
+
+        if (licenseData) setLicenses(licenseData);
+
+        if (settings) {
+          const settingsMap = settings.reduce(
+            (acc: Record<string, ReminderSettings>, setting: {
+              type: string;
+              notifications_enabled: boolean;
+              reminder_days_before: number;
+              reminder_frequency: string;
+            }) => ({
+              ...acc,
+              [setting.type]: {
+                notifications_enabled: setting.notifications_enabled,
+                reminder_days_before: setting.reminder_days_before,
+                reminder_frequency: setting.reminder_frequency,
+              },
+            }),
+            {}
+          );
+          setTypeSettings(settingsMap);
         }
       } catch (error) {
         setError(error instanceof Error ? error.message : "An error occurred");
@@ -265,13 +234,20 @@ const ReminderSettings = () => {
     };
 
     initializeData();
-  }, [user, fetchLicenseData, fetchSettings, checkSubscription, navigate]);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [user, user?.id, navigate, fetchLicenseData, fetchSettings]);
 
   const handleReminderSettingsChange = async (
     type: LicenseType,
     daysBefore: number,
     frequency: string
   ) => {
+    console.log('Updating reminder settings:', { type, daysBefore, frequency });
     if (!user?.id) {
       toast.error("Please sign in to update settings");
       return;

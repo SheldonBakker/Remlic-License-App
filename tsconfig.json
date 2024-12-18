@@ -1,7 +1,12 @@
 {
+  "compilerOptions": {
+    "declaration": false,
+    "declarationMap": false
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  "include": ["src/@types/*.d.ts"]
 }
