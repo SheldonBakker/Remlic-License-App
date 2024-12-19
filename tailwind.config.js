@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import plugin from '@tailwindcss/forms'
+
 export default {
   content: [
     "./index.html",
@@ -8,6 +10,7 @@ export default {
     extend: {},
   },
   plugins: [
+    plugin,
     require('tailwind-scrollbar'),
   ],
 };
