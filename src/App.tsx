@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import { AuthChangeEvent, Session } from "@supabase/gotrue-js";
 import Documentation from "./pages/Documentation";
 import { HelmetProvider } from 'react-helmet-async';
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 const queryClient = new QueryClient();
 
@@ -253,6 +254,7 @@ const App: React.FC = () => {
           <Footer />
         </div>
       </QueryClientProvider>
+      <SpeedInsights />
     </HelmetProvider>
   );
 };
