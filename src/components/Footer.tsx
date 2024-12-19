@@ -55,7 +55,7 @@ const Footer: React.FC = memo(() => {
 
             <div className="flex items-center gap-6 text-white/70">
               <a
-                href="mailto:contact@example.com"
+                href="mailto:support@remlic.com"
                 className="hover:text-white transition-all duration-300 hover:scale-110"
                 aria-label="Email"
               >

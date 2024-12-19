@@ -143,36 +143,17 @@ const Price = () => {
           return;
         }
 
-        let paystackKey;
-        let planCode;
-
-        if (import.meta.env.PROD) {
-          const response = await fetch("/api/get-config.php");
-          const config = await response.json();
-          paystackKey = config.PAYSTACK_PUBLIC_KEY;
-          planCode =
-            tierName === "Tier 1"
-              ? config.PAYSTACK_TIER1_PLAN_CODE
-              : tierName === "Tier 2"
-              ? config.PAYSTACK_TIER2_PLAN_CODE
-              : tierName === "Tier 3"
-              ? config.PAYSTACK_TIER3_PLAN_CODE
-              : tierName === "Tier 4"
-              ? config.PAYSTACK_TIER4_PLAN_CODE
-              : config.PAYSTACK_PREMIUM_PLAN_CODE;
-        } else {
-          paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
-          planCode =
-            tierName === "Tier 1"
-              ? import.meta.env.VITE_PAYSTACK_TIER1_PLAN_CODE
-              : tierName === "Tier 2"
-              ? import.meta.env.VITE_PAYSTACK_TIER2_PLAN_CODE
-              : tierName === "Tier 3"
-              ? import.meta.env.VITE_PAYSTACK_TIER3_PLAN_CODE
-              : tierName === "Tier 4"
-              ? import.meta.env.VITE_PAYSTACK_TIER4_PLAN_CODE
-              : import.meta.env.VITE_PAYSTACK_PREMIUM_PLAN_CODE;
-        }
+        const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+        const planCode =
+          tierName === "Tier 1"
+            ? import.meta.env.VITE_PAYSTACK_TIER1_PLAN_CODE
+            : tierName === "Tier 2"
+            ? import.meta.env.VITE_PAYSTACK_TIER2_PLAN_CODE
+            : tierName === "Tier 3"
+            ? import.meta.env.VITE_PAYSTACK_TIER3_PLAN_CODE
+            : tierName === "Tier 4"
+            ? import.meta.env.VITE_PAYSTACK_TIER4_PLAN_CODE
+            : import.meta.env.VITE_PAYSTACK_PREMIUM_PLAN_CODE;
 
         if (!paystackKey) {
           throw new Error("Paystack public key not found");
