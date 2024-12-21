@@ -52,21 +52,27 @@ const Documentation = () => {
   const subscriptionTiers = [
     {
       id: "basic",
-      title: "Basic",
-      price: "R100/year",
+      title: "Tier 1",
+      price: "R150/year",
       features: ["2 licenses per category", "Email notifications", "Basic dashboard"],
     },
     {
       id: "standard",
-      title: "Standard",
-      price: "R200/year",
+      title: "Tier 2",
+      price: "R250/year",
       features: ["8 licenses per category", "Priority support", "Advanced dashboard"],
     },
     {
       id: "professional",
-      title: "Professional",
-      price: "R300/year",
-      features: ["30 licenses per category", "Custom notifications", "Analytics"],
+      title: "Tier 3",
+      price: "R350/year",
+      features: ["12 licenses per category", "Custom notifications", "Analytics"],
+    },
+    {
+      id: "advanced",
+      title: "Tier 4",
+      price: "R550/year",
+      features: ["30 licenses per category", "Priority support", "Advanced features"],
     },
     {
       id: "premium",
@@ -168,7 +174,7 @@ const Documentation = () => {
     },
     {
       question: "What information can you see?",
-      answer: "No, all information is hashed except for your profile information which includes: First Name, Last Name, ID number, Contact Number, Email, and what package you have. Hashing means the data is converted into a scrambled code that can't be reversed or read, ensuring your sensitive information remains secure and private."
+      answer: "All information is encrypted except for your profile information which includes: First Name, Last Name, ID number, Contact Number, Email, and what package you have. Hashing means the data is converted into a scrambled code that can't be reversed or read, ensuring your sensitive information remains secure and private."
     }
   ];
 
@@ -261,10 +267,11 @@ const Documentation = () => {
                     </p>
                     {step === 2 && (
                       <ul className="list-disc list-inside ml-4 space-y-2 text-white">
-                        <li>Tier 1 (R100/year): Basic plan with 2 licenses per category</li>
-                        <li>Tier 2 (R200/year): Standard plan with 8 licenses per category</li>
-                        <li>Tier 3 (R300/year): Professional plan with 30 licenses per category</li>
-                        <li>Premium (R1,000/year): Enterprise plan with unlimited licenses and API access</li>
+                        <li>Tier 1 (R150/year): Basic plan with 2 licenses per category</li>
+                        <li>Tier 2 (R250/year): Standard plan with 8 licenses per category</li>
+                        <li>Tier 3 (R350/year): Professional plan with 12 licenses per category</li>
+                        <li>Tier 4 (R550/year): Advanced plan with 30 licenses per category</li>
+                        <li>Premium (R1,000/year): Enterprise plan with unlimited licenses</li>
                       </ul>
                     )}
                   </div>
@@ -275,17 +282,39 @@ const Documentation = () => {
 
           {/* Add Subscription Tiers Section */}
           <section id="subscription-plans" className="bg-[#1f2937]/30 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-indigo-500/20">
-            <h2 className="text-2xl font-bold text-white mb-6">Subscription Plans</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-white mb-3">Subscription Plans</h2>
+              <p className="text-white/70">Choose the perfect plan for your needs</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {subscriptionTiers.map((tier) => (
-                <div key={tier.id} className="bg-white/5 rounded-xl p-6 border border-indigo-500/20">
-                  <h3 className="text-xl font-semibold text-white mb-2">{tier.title}</h3>
-                  <p className="text-2xl font-bold text-white mb-4">{tier.price}</p>
-                  <ul className="space-y-2">
+                <div 
+                  key={tier.id} 
+                  className="group relative bg-white/5 rounded-xl p-6 border border-indigo-500/20
+                    hover:bg-white/10 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10
+                    transition-all duration-300 ease-out"
+                >
+                  {tier.id === 'advanced' && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">
+                      {tier.title}
+                    </h3>
+                    <p className="text-3xl font-extrabold text-white mb-2">
+                      {tier.price}
+                    </p>
+                    <div className="h-px w-16 bg-indigo-500/30 mx-auto"></div>
+                  </div>
+                  <ul className="space-y-3">
                     {tier.features.map((feature, index) => (
-                      <li key={index} className="flex items-center text-white">
-                        <FiCheck className="h-5 w-5 text-green-400 mr-2" />
-                        {feature}
+                      <li key={index} className="flex items-start text-white/80 group-hover:text-white transition-colors">
+                        <FiCheck className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>

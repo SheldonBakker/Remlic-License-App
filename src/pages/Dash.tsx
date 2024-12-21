@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from 'react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback, memo, useReducer, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
@@ -11,13 +9,7 @@ import {
   FiRefreshCw,
   FiSearch
 } from 'react-icons/fi';
-import { 
-  AiOutlineCar,
-  AiOutlineIdcard,
-  AiOutlineSafetyCertificate,
-  AiOutlineFileProtect,
-  AiOutlineFileText,
-} from 'react-icons/ai';
+import { LICENSE_TYPES } from '../constants/licenses';
 
 // Components
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -31,50 +23,6 @@ import ContractCard from '../components/dashboard/LicenseCard';
 // Types
 import { LicenseGroup, Contract, License } from '../types/LicenseGroup';
 
-// Constants
-const LICENSE_TYPES = [
-  {
-    id: 'drivers',
-    title: "Driver's License",
-    icon: AiOutlineIdcard,
-  },
-  {
-    id: 'vehicles',
-    title: 'Vehicle Registration',
-    icon: AiOutlineCar,
-  },
-  {
-    id: 'prpds',
-    title: 'PrPD',
-    icon: AiOutlineSafetyCertificate,
-  },
-  {
-    id: 'firearms',
-    title: 'Firearm License',
-    icon: AiOutlineFileProtect,
-  },
-  {
-    id: 'works',
-    title: 'Work Contract',
-    icon: AiOutlineFileText,
-  },
-  {
-    id: 'passports',
-    title: 'Passport',
-    icon: AiOutlineIdcard,
-  },
-  {
-    id: 'others',
-    title: 'Other Document',
-    icon: AiOutlineFileText,
-  },
-  {
-    id: 'tvlicenses',
-    title: 'TV License',
-    icon: AiOutlineFileText,
-  },
-] as const;
-
 export interface AddLicenseModalProps {
   open: boolean;
   onClose: () => void;
@@ -83,37 +31,105 @@ export interface AddLicenseModalProps {
   currentLicenses: LicenseGroup;
 }
 
+const MemoizedLicenseTypeGrid = memo(LicenseTypeGrid);
+const MemoizedContractCard = memo(ContractCard);
+const MemoizedAddLicenseModal = memo(AddLicenseModal);
+const MemoizedRenewLicenseModal = memo(RenewLicenseModal);
+const MemoizedDeleteLicenseModal = memo(DeleteLicenseModal);
+
+// Replace multiple useState calls with useReducer for related state
+interface DashState {
+  licenses: LicenseGroup;
+  userTier: string | null;
+  isLoading: boolean;
+  hasActiveSubscription: boolean;
+  selectedSection: string | null;
+  isRefreshing: boolean;
+  searchQuery: string;
+  modals: {
+    add: boolean;
+    renew: boolean;
+    delete: boolean;
+  };
+  editingLicense: Contract | null;
+  licenseToDelete: Contract | null;
+}
+
+type DashAction =
+  | { type: 'SET_LICENSES'; payload: LicenseGroup }
+  | { type: 'SET_USER_TIER'; payload: string | null }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_SUBSCRIPTION'; payload: boolean }
+  | { type: 'SET_SECTION'; payload: string | null }
+  | { type: 'SET_REFRESHING'; payload: boolean }
+  | { type: 'SET_SEARCH'; payload: string }
+  | { type: 'TOGGLE_MODAL'; modal: 'add' | 'renew' | 'delete'; value: boolean }
+  | { type: 'SET_EDITING_LICENSE'; payload: Contract | null }
+  | { type: 'SET_LICENSE_TO_DELETE'; payload: Contract | null };
+
+const dashReducer = (state: DashState, action: DashAction): DashState => {
+  switch (action.type) {
+    case 'SET_LICENSES':
+      return { ...state, licenses: action.payload };
+    case 'SET_USER_TIER':
+      return { ...state, userTier: action.payload };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'SET_SUBSCRIPTION':
+      return { ...state, hasActiveSubscription: action.payload };
+    case 'SET_SECTION':
+      return { ...state, selectedSection: action.payload };
+    case 'SET_REFRESHING':
+      return { ...state, isRefreshing: action.payload };
+    case 'SET_SEARCH':
+      return { ...state, searchQuery: action.payload };
+    case 'TOGGLE_MODAL':
+      return {
+        ...state,
+        modals: { ...state.modals, [action.modal]: action.value }
+      };
+    case 'SET_EDITING_LICENSE':
+      return { ...state, editingLicense: action.payload };
+    case 'SET_LICENSE_TO_DELETE':
+      return { ...state, licenseToDelete: action.payload };
+    default:
+      return state;
+  }
+};
+
 const Dash: React.FC = () => {
   // State management
-  const [licenses, setLicenses] = useState<LicenseGroup>({
-    vehicles: [],
-    drivers: [],
-    firearms: [],
-    prpds: [],
-    works: [],
-    others: [],
-    passports: [],
-    tvlicenses: []
+  const [state, dispatch] = useReducer(dashReducer, {
+    licenses: {
+      vehicles: [],
+      drivers: [],
+      firearms: [],
+      prpds: [],
+      works: [],
+      others: [],
+      passports: [],
+      tvlicenses: []
+    },
+    userTier: null,
+    isLoading: true,
+    hasActiveSubscription: false,
+    selectedSection: null,
+    isRefreshing: false,
+    searchQuery: '',
+    modals: {
+      add: false,
+      renew: false,
+      delete: false
+    },
+    editingLicense: null,
+    licenseToDelete: null
   });
-  const [userTier, setUserTier] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Modal states
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [editingLicense, setEditingLicense] = useState<Contract | null>(null);
-  const [licenseToDelete, setLicenseToDelete] = useState<Contract | null>(null);
 
   const navigate = useNavigate();
 
   // Fetch licenses from Supabase
   const fetchLicenses = useCallback(async () => {
-    setIsRefreshing(true);
+    dispatch({ type: 'SET_REFRESHING', payload: true });
     try {
       const { data: { session } } = await (await supabase).auth.getSession();
       if (!session) {
@@ -141,7 +157,7 @@ const Dash: React.FC = () => {
         (await supabase).from('tv_licenses').select('*').eq('user_id', session.user.id)
       ]);
 
-      setLicenses({
+      dispatch({ type: 'SET_LICENSES', payload: {
         vehicles: vehicles || [],
         drivers: drivers || [],
         firearms: firearms || [],
@@ -150,13 +166,14 @@ const Dash: React.FC = () => {
         others: others || [],
         passports: passports || [],
         tvlicenses: tvlicenses || []
-      });
-    } catch (error: any) {
+      } });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast.error('Error fetching licenses');
-      console.error('Error:', error.message);
+      console.error('Error:', errorMessage);
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
+      dispatch({ type: 'SET_REFRESHING', payload: false });
     }
   }, [navigate]);
 
@@ -165,27 +182,27 @@ const Dash: React.FC = () => {
   }, [fetchLicenses]);
 
   // Handlers
-  const handleAddLicense = () => setIsAddModalOpen(true);
-  const handleRenewLicense = (license: Contract) => {
-    const licenseType = Object.entries(licenses).find(([_, items]) => 
-      items.some(item => item.id === license.id)
+  const handleAddLicense = () => dispatch({ type: 'TOGGLE_MODAL', modal: 'add', value: true });
+  const handleRenewLicense = useCallback((license: Contract) => {
+    const licenseType = Object.entries(state.licenses).find(([type]) => 
+      state.licenses[type].some(item => item.id === license.id)
     )?.[0] || null;
     
-    setEditingLicense({...license, type: licenseType});
-    setIsRenewModalOpen(true);
-  };
-  const handleDeleteLicense = (license: Contract) => {
+    dispatch({ type: 'SET_EDITING_LICENSE', payload: {...license, type: licenseType} });
+    dispatch({ type: 'TOGGLE_MODAL', modal: 'renew', value: true });
+  }, [state.licenses, dispatch]);
+  const handleDeleteLicense = useCallback((license: Contract) => {
     const licenseWithType = {
       ...license,
-      type: Object.entries(licenses).find(([_, items]) => 
-        items.some(item => item.id === license.id)
+      type: Object.entries(state.licenses).find(([type]) => 
+        state.licenses[type].some(item => item.id === license.id)
       )?.[0] || null
     };
-    setLicenseToDelete(licenseWithType);
-    setIsDeleteModalOpen(true);
-  };
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
+    dispatch({ type: 'SET_LICENSE_TO_DELETE', payload: licenseWithType });
+    dispatch({ type: 'TOGGLE_MODAL', modal: 'delete', value: true });
+  }, [state.licenses, dispatch]);
+  const handleRefresh = useCallback(async () => {
+    dispatch({ type: 'SET_REFRESHING', payload: true });
     toast.promise(
       fetchLicenses(),
       {
@@ -193,8 +210,8 @@ const Dash: React.FC = () => {
         success: 'Licenses refreshed successfully',
         error: 'Failed to refresh licenses'
       }
-    ).finally(() => setIsRefreshing(false));
-  };
+    ).finally(() => dispatch({ type: 'SET_REFRESHING', payload: false }));
+  }, [dispatch, fetchLicenses]);
 
   const fetchUserTier = useCallback(async () => {
     const { data: { session } } = await (await supabase).auth.getSession();
@@ -204,8 +221,8 @@ const Dash: React.FC = () => {
         .select('type_of_user, subscription_status')
         .eq('id', session.user.id)
         .single();
-      setUserTier(profile?.type_of_user || null);
-      setHasActiveSubscription(profile?.subscription_status === 'active');
+      dispatch({ type: 'SET_USER_TIER', payload: profile?.type_of_user || null });
+      dispatch({ type: 'SET_SUBSCRIPTION', payload: profile?.subscription_status === 'active' });
     }
   }, []);
 
@@ -214,30 +231,19 @@ const Dash: React.FC = () => {
   }, [fetchUserTier]);
 
   const handleSectionSelect = (section: string) => {
-    if (selectedSection === section) {
-      setSelectedSection(null);  // Deselect if clicking the same section
+    if (state.selectedSection === section) {
+      dispatch({ type: 'SET_SECTION', payload: null });  // Deselect if clicking the same section
     } else {
-      setSelectedSection(section);
+      dispatch({ type: 'SET_SECTION', payload: section });
     }
   };
 
   // Add this function to filter licenses
-  const getFilteredLicenses = useCallback(() => {
+  const getFilteredLicenses = useCallback((licenses: LicenseGroup, searchQuery: string) => {
     if (!searchQuery.trim()) return licenses;
 
     const query = searchQuery.toLowerCase().trim();
-    const filtered: LicenseGroup = {
-      vehicles: [],
-      drivers: [],
-      firearms: [],
-      prpds: [],
-      works: [],
-      others: [],
-      passports: [],
-      tvlicenses: []
-    };
-
-    Object.entries(licenses).forEach(([type, items]) => {
+    return Object.entries(licenses).reduce((filtered, [type, items]) => {
       filtered[type] = items.filter((license) => {
         const searchableFields = [
           license.first_name,
@@ -247,134 +253,165 @@ const Dash: React.FC = () => {
           license.make,
           license.model,
           license.license_number
-        ].filter(Boolean); // Remove undefined/null values
+        ].filter(Boolean);
 
         return searchableFields.some(field => 
           field?.toString().toLowerCase().includes(query)
         );
       });
-    });
+      return filtered;
+    }, {
+      vehicles: [],
+      drivers: [],
+      firearms: [],
+      prpds: [],
+      works: [],
+      others: [],
+      passports: [],
+      tvlicenses: []
+    } as LicenseGroup);
+  }, []);
 
-    return filtered;
-  }, [licenses, searchQuery]);
+  // Use memo for expensive computations
+  const filteredLicenses = useMemo(() => 
+    getFilteredLicenses(state.licenses, state.searchQuery),
+    [state.licenses, state.searchQuery, getFilteredLicenses]
+  );
 
-  if (isLoading) {
+  // Optimize the license cards rendering
+  const renderLicenseCards = useMemo(() => 
+    Object.entries(filteredLicenses)
+      .filter(([type]) => state.selectedSection === null || type === state.selectedSection)
+      .map(([type, items]) => 
+        items.map((license: Contract) => (
+          <MemoizedContractCard
+            key={license.id}
+            contract={license}
+            type={type}
+            onRenew={handleRenewLicense}
+            onDelete={handleDeleteLicense}
+            onRefresh={handleRefresh}
+          />
+        ))
+      ),
+    [filteredLicenses, state.selectedSection, handleRenewLicense, handleDeleteLicense, handleRefresh]
+  );
+
+  if (state.isLoading) {
     return <LoadingSpinner text="Loading your licenses..." />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] px-4 py-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] px-3 sm:px-4 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header Section */}
-        <div className="bg-[#1f2937]/95 backdrop-blur-xl rounded-2xl p-6 border border-indigo-500/20">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-2">License Management</h1>
-              <p className="text-gray-400">Manage all your licenses in one place</p>
+        <div className="bg-[#1f2937]/95 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-indigo-500/20">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">License Management</h1>
+                <p className="text-sm sm:text-base text-gray-400">Manage all your licenses in one place</p>
+              </div>
             </div>
             
             {/* Search and Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="flex flex-col gap-3 w-full">
               {/* Search Input */}
-              <div className="relative flex-grow sm:flex-grow-0 sm:min-w-[300px]">
+              <div className="relative w-full">
                 <input
                   type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name, ID, registration..."
+                  value={state.searchQuery}
+                  onChange={(e) => dispatch({ type: 'SET_SEARCH', payload: e.target.value })}
+                  placeholder="Search licenses..."
                   className="w-full px-4 py-2 pl-10 bg-[#374151]/50 border border-indigo-500/20 
                     rounded-lg text-white placeholder-gray-400 focus:border-indigo-500/50 
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm sm:text-base"
                 />
                 <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
                 <button
                   onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/10 text-indigo-400 
-                    hover:bg-indigo-500/20 transition-all duration-200 
-                    disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={state.isRefreshing}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg 
+                    bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 
+                    transition-all duration-200 disabled:opacity-50 
+                    disabled:cursor-not-allowed w-full sm:w-auto text-sm sm:text-base"
                   title="Refresh"
                 >
-                  <FiRefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin duration-[3000ms]' : ''}`} />
-                  Refresh
+                  <FiRefreshCw className={`w-5 h-5 ${state.isRefreshing ? 'animate-spin duration-1000 ease-in-out' : ''}`} />
+                  <span className="hidden sm:inline">Refresh</span>
                 </button>
-                {hasActiveSubscription ? (
+                {state.hasActiveSubscription ? (
                   <button
                     onClick={handleAddLicense}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 
-                      hover:bg-indigo-600 rounded-lg text-white transition-all duration-200"
+                    className="flex items-center justify-center gap-2 px-4 py-2 
+                      bg-indigo-500 hover:bg-indigo-600 rounded-lg text-white 
+                      transition-all duration-200 w-full sm:w-auto text-sm sm:text-base"
                   >
-                    <FiPlus /> Add License
+                    <FiPlus /> 
+                    <span className="hidden sm:inline">Add License</span>
+                    <span className="sm:hidden">Add</span>
                   </button>
                 ) : (
                   <button
                     onClick={() => navigate('/price')}
-                    className="flex items-center gap-2 px-4 py-2 bg-amber-500 
-                      hover:bg-amber-600 rounded-lg text-white transition-all duration-200"
+                    className="flex items-center justify-center gap-2 px-4 py-2 
+                      bg-amber-500 hover:bg-amber-600 rounded-lg text-white 
+                      transition-all duration-200 w-full sm:w-auto text-sm sm:text-base"
                   >
-                    <FiCreditCard /> Upgrade Account
+                    <FiCreditCard /> 
+                    <span className="hidden sm:inline">Upgrade Account</span>
+                    <span className="sm:hidden">Upgrade</span>
                   </button>
                 )}
               </div>
             </div>
-          </div>
 
-          {/* License Type Grid */}
-          <LicenseTypeGrid
-            licenses={getFilteredLicenses()}
-            selectedSection={selectedSection}
-            onSectionSelect={handleSectionSelect}
-            userTier={userTier}
-          />
+            {/* License Type Grid */}
+            <div className="mt-2 sm:mt-4">
+              <MemoizedLicenseTypeGrid
+                licenses={filteredLicenses}
+                selectedSection={state.selectedSection}
+                onSectionSelect={handleSectionSelect}
+                userTier={state.userTier}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Main Content - Update to use filtered licenses */}
-        {!hasActiveSubscription ? (
+        {/* Main Content */}
+        {!state.hasActiveSubscription ? (
           <SubscriptionRequired />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(getFilteredLicenses())
-              .filter(([type]) => selectedSection === null || type === selectedSection)
-              .map(([type, items]) => (
-                items.map((license: Contract) => (
-                  <ContractCard
-                    key={license.id}
-                    contract={license}
-                    type={type}
-                    onRenew={handleRenewLicense}
-                    onDelete={handleDeleteLicense}
-                    onRefresh={handleRefresh}
-                  />
-                ))
-              ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {renderLicenseCards}
           </div>
         )}
       </div>
 
       {/* Modals */}
-      <AddLicenseModal
-        open={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        userTier={userTier}
-        currentLicenses={licenses}
+      <MemoizedAddLicenseModal
+        open={state.modals.add}
+        onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'add', value: false })}
+        userTier={state.userTier}
+        currentLicenses={state.licenses}
         licenseTypes={LICENSE_TYPES}
       />
 
-      <RenewLicenseModal
-        open={isRenewModalOpen}
-        onClose={() => setIsRenewModalOpen(false)}
-        license={editingLicense as License | null}
+      <MemoizedRenewLicenseModal
+        open={state.modals.renew}
+        onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'renew', value: false })}
+        license={state.editingLicense as License | null}
         onRenew={fetchLicenses}
       />
 
-      <DeleteLicenseModal
-        open={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        license={licenseToDelete as License | null}
+      <MemoizedDeleteLicenseModal
+        open={state.modals.delete}
+        onClose={() => dispatch({ type: 'TOGGLE_MODAL', modal: 'delete', value: false })}
+        license={state.licenseToDelete as License | null}
         onDelete={fetchLicenses}
       />
     </div>

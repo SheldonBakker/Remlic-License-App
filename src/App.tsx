@@ -10,31 +10,28 @@ import {
 import LoadingSpinner from "./components/LoadingSpinner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { supabase } from "./lib/supabase.ts";
+import { supabase } from "./lib/supabase";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NotFound from "./pages/NotFound";
 import { AuthChangeEvent, Session } from "@supabase/gotrue-js";
 import Documentation from "./pages/Documentation";
 import { HelmetProvider } from 'react-helmet-async';
-import { SpeedInsights } from "@vercel/speed-insights/react"
-import { Analytics } from "@vercel/analytics/react"
-
 const queryClient = new QueryClient();
 
 // Lazy load all pages
-const Home = lazy(() => import("./pages/Home.tsx"));
-const Login = lazy(() => import("./pages/Login.tsx"));
-const Register = lazy(() => import("./pages/Register.tsx"));
-const Profile = lazy(() => import("./pages/Profile.tsx"));
-const Contact = lazy(() => import("./pages/Contact.tsx"));
-const Terms = lazy(() => import("./components/Terms.tsx"));
-const Privacy = lazy(() => import("./components/Privacy.tsx"));
-const ReminderSettings = lazy(() => import("./pages/ReminderSettings.tsx"));
-const Price = lazy(() => import("./pages/Price.tsx"));
-const Emailconfirmed = lazy(() => import("./pages/Auth.tsx"));
-const Maintenance = lazy(() => import("./pages/Maintanence.tsx"));
-const Dashboard = lazy(() => import("./pages/Dash.tsx"));
-const Admin = lazy(() => import("./pages/Admin.tsx"));
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Terms = lazy(() => import("./components/Terms"));
+const Privacy = lazy(() => import("./components/Privacy"));
+const ReminderSettings = lazy(() => import("./pages/ReminderSettings"));
+const Price = lazy(() => import("./pages/Price"));
+const Emailconfirmed = lazy(() => import("./pages/Auth"));
+const Maintenance = lazy(() => import("./pages/Maintanence"));
+const Dashboard = lazy(() => import("./pages/Dash"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -213,7 +210,7 @@ const App: React.FC = () => {
         ),
       },
       {
-        path: "/reminder-settings",
+        path: "/settings",
         element: (
           <Suspense
             fallback={<LoadingSpinner text="Loading Reminder Settings..." />}
@@ -255,8 +252,6 @@ const App: React.FC = () => {
           <Footer />
         </div>
       </QueryClientProvider>
-      <SpeedInsights />
-      <Analytics />
     </HelmetProvider>
   );
 };

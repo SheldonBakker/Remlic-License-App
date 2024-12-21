@@ -27,7 +27,7 @@ export type LicenseType =
   | "works"
   | "others"
   | "passports"
-  | "tvlicenses";
+  | "tv_licenses";
 
 export interface License {
   id: string;

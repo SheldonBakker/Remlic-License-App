@@ -17,6 +17,15 @@ interface ExtendedPaystackOptions extends PaystackOptions {
   channels?: string[];
 }
 
+interface Config {
+  PAYSTACK_PUBLIC_KEY: string;
+  PAYSTACK_TIER1_PLAN_CODE: string;
+  PAYSTACK_TIER2_PLAN_CODE: string;
+  PAYSTACK_TIER3_PLAN_CODE: string;
+  PAYSTACK_TIER4_PLAN_CODE: string;
+  PAYSTACK_PREMIUM_PLAN_CODE: string;
+}
+
 const Price = () => {
   const navigate = useNavigate();
   const { user } = useUser();
@@ -25,6 +34,7 @@ const Price = () => {
   const [loading, setLoading] = useState(true);
   const [, setIsCheckingSubscription] = useState(false);
   const [currentUserTier, setCurrentUserTier] = useState<string | null>(null);
+  const [config, setConfig] = useState<Config | null>(null);
 
   const tiers = useMemo(
     () => [
@@ -109,10 +119,29 @@ const Price = () => {
     return () => clearTimeout(timeoutId);
   }, [user?.id]);
 
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('/api/get-config.php');
+        const data = await response.json();
+        setConfig(data);
+      } catch (error) {
+        console.error('Failed to load config:', error);
+        toast.error('Failed to load configuration');
+      }
+    };
+    fetchConfig();
+  }, []);
+
   const handleSubscription = useCallback(
     async (tierName: string) => {
       if (!user?.email) {
         toast.error("Please log in to subscribe");
+        return;
+      }
+
+      if (!config) {
+        toast.error("Configuration not loaded");
         return;
       }
 
@@ -143,17 +172,17 @@ const Price = () => {
           return;
         }
 
-        const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+        const paystackKey = config.PAYSTACK_PUBLIC_KEY;
         const planCode =
           tierName === "Tier 1"
-            ? import.meta.env.VITE_PAYSTACK_TIER1_PLAN_CODE
+            ? config.PAYSTACK_TIER1_PLAN_CODE
             : tierName === "Tier 2"
-            ? import.meta.env.VITE_PAYSTACK_TIER2_PLAN_CODE
+            ? config.PAYSTACK_TIER2_PLAN_CODE
             : tierName === "Tier 3"
-            ? import.meta.env.VITE_PAYSTACK_TIER3_PLAN_CODE
+            ? config.PAYSTACK_TIER3_PLAN_CODE
             : tierName === "Tier 4"
-            ? import.meta.env.VITE_PAYSTACK_TIER4_PLAN_CODE
-            : import.meta.env.VITE_PAYSTACK_PREMIUM_PLAN_CODE;
+            ? config.PAYSTACK_TIER4_PLAN_CODE
+            : config.PAYSTACK_PREMIUM_PLAN_CODE;
 
         if (!paystackKey) {
           throw new Error("Paystack public key not found");
@@ -247,7 +276,7 @@ const Price = () => {
         setIsCheckingSubscription(false);
       }
     },
-    [user?.email, user?.id, navigate, tiers]
+    [user?.email, user?.id, navigate, tiers, config]
   );
 
   const renderActionButton = useMemo(

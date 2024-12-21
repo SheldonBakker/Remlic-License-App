@@ -13,17 +13,12 @@ import PassportForm from '../Forms/PassportForm';
 import TVLicenseForm from '../Forms/TVLicenseForm';
 import OtherDocumentsForm from '../Forms/OtherDocumentsForm';
 import CustomScrollbar from '../common/CustomScrollbar';
-import { IconType } from 'react-icons';
+import { LICENSE_TYPES } from '../../constants/licenses';
 
 interface AddLicenseModalProps {
   open: boolean;
   onClose: () => void;
-  licenseTypes: ReadonlyArray<{
-    readonly id: string;
-    readonly title: string;
-    readonly icon: IconType;
-    readonly description?: string;
-  }>;
+  licenseTypes: typeof LICENSE_TYPES;
   userTier: string | null;
   currentLicenses: LicenseGroup;
 }
@@ -88,38 +83,41 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
           style: {
             backgroundColor: 'transparent',
             boxShadow: 'none',
+            margin: '16px',
           },
         }}
       >
-        <div className="bg-[#1f2937]/95 backdrop-blur-xl rounded-2xl p-6 border border-indigo-500/20">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-white">Add New License</h2>
+        <div className="bg-[#1f2937]/95 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-indigo-500/20">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-white">Add New License</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text-white transition-colors p-1"
             >
-              <FiX className="w-6 h-6" />
+              <FiX className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          <CustomScrollbar className="max-h-[70vh] overflow-y-auto">
-            <div className="grid gap-4">
+          <CustomScrollbar className="max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
+            <div className="grid gap-3 sm:gap-4">
               {licenseTypes.map((type) => (
                 <button
                   key={type.id}
                   onClick={() => handleLicenseTypeSelect(type.id)}
-                  className="flex items-center gap-3 p-4 rounded-xl
+                  className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl
                     bg-[#374151]/50 hover:bg-[#374151]/70 
                     border border-indigo-500/20 hover:border-indigo-500/40 
                     transition-all duration-200"
                 >
                   <span className="text-indigo-400">
-                    {React.createElement(type.icon, { className: 'w-6 h-6' })}
+                    {React.createElement(type.icon, { 
+                      className: 'w-5 h-5 sm:w-6 sm:h-6' 
+                    })}
                   </span>
                   <div className="text-left">
-                    <span className="text-white font-medium block">{type.title}</span>
+                    <span className="text-white text-sm sm:text-base font-medium block">{type.title}</span>
                     {type.description && (
-                      <span className="text-gray-400 text-sm">{type.description}</span>
+                      <span className="text-gray-400 text-xs sm:text-sm">{type.description}</span>
                     )}
                   </div>
                 </button>
@@ -138,6 +136,7 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
           style: {
             backgroundColor: 'transparent',
             boxShadow: 'none',
+            margin: '16px',
           },
         }}
       >

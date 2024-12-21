@@ -41,9 +41,9 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
 
   const renderContractInfo = () => {
     const baseTemplate = (
-      <div className="relative flex justify-between items-start p-1">
-        <div className="flex-1">
-          <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-0.5 h-16 bg-gradient-to-b from-indigo-400 to-purple-500 rounded-full" />
+      <div className="relative flex flex-col sm:flex-row justify-between items-start p-1">
+        <div className="flex-1 w-full">
+          <div className="absolute -left-2 top-0 sm:top-1/2 h-full sm:h-16 sm:-translate-y-1/2 w-0.5 bg-gradient-to-b from-indigo-400 to-purple-500 rounded-full" />
           
           <div className="flex items-center gap-2 mb-3">
             <span className="text-sm font-medium text-indigo-300/90">
@@ -51,8 +51,8 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
             </span>
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-white/90 tracking-tight">
+          <div className="space-y-2 w-full">
+            <h3 className="text-xl sm:text-2xl font-bold text-white/90 tracking-tight break-words">
               {(() => {
                 switch (type) {
                   case 'vehicles':
@@ -91,9 +91,9 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
           </div>
         </div>
 
-        <div className="text-indigo-300/40">
+        <div className="text-indigo-300/40 hidden sm:block">
           {React.createElement(contractTypeInfo?.icon || FiFile, { 
-            className: 'w-14 h-14 transform -rotate-12 group-hover:rotate-0 transition-all duration-300 ease-out' 
+            className: 'w-10 h-10 sm:w-14 sm:h-14 transform -rotate-12 group-hover:rotate-0 transition-all duration-300 ease-out' 
           })}
         </div>
       </div>
@@ -107,10 +107,10 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
                     hover:border-indigo-500/30 hover:shadow-indigo-500/10 hover:from-slate-800 hover:to-slate-900">
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/5 to-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
-      <div className="relative p-6 space-y-6">
+      <div className="relative p-4 sm:p-6 space-y-4 sm:space-y-6">
         {renderContractInfo()}
         
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
           <div className={`flex items-center gap-3 px-4 py-2.5 rounded-lg backdrop-blur-sm transition-colors duration-200 ${
             !isValid 
               ? 'bg-red-500/5 text-red-300 border-red-500/20'
@@ -130,7 +130,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
             </span>
           </div>
 
-          <div className="flex flex-col gap-1 text-sm px-4">
+          <div className="flex flex-col gap-1 text-sm px-2 sm:px-4">
             <div className="text-slate-400 font-medium">
               {daysLeft > 0 
                 ? `Expires on ${new Date(contract.expiry_date).toLocaleDateString('en-US', { 
@@ -152,18 +152,18 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
           </div>
         </div>
 
-        <div className="flex gap-2.5 pt-2">
+        <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
           <Pause 
             isPaused={isPaused}
             onTogglePause={handlePauseToggle}
             licenseId={contract.id}
             licenseType={type as LicenseType}
-            className="flex-1"
+            className="w-full sm:flex-1"
           />
           
           <button
             onClick={() => onDelete(contract)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+            className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
               bg-red-500/5 text-red-300 border border-red-500/20
               hover:bg-red-500/10 hover:border-red-500/30 active:scale-[0.98]
               transition-all duration-200"
@@ -174,7 +174,7 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
           
           <button
             onClick={() => onRenew(contract)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+            className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
               bg-emerald-500/5 text-emerald-300 border border-emerald-500/20
               hover:bg-emerald-500/10 hover:border-emerald-500/30 active:scale-[0.98]
               transition-all duration-200"

@@ -1,7 +1,8 @@
 import type { IconType } from 'react-icons';
-import { FiCreditCard, FiTarget, FiFileText, FiFile, FiTv } from 'react-icons/fi';
+import { FiFileText, FiFile, FiUser, FiBook } from 'react-icons/fi';
 import { AiOutlineCar } from 'react-icons/ai';
-import { BsTruck } from 'react-icons/bs';
+import { BsTruck, BsTv } from 'react-icons/bs';
+import { GiPistolGun } from 'react-icons/gi';
 
 export const LICENSE_TYPES: Array<{
   id: string;
@@ -14,7 +15,7 @@ export const LICENSE_TYPES: Array<{
     id: 'drivers',
     title: "Driver's License",
     description: "Track and manage your driver's license renewals",
-    icon: FiCreditCard,
+    icon: FiUser,
     fields: ["First Name", "Last Name", "ID Number", "Expiry Date"],
   },
   {
@@ -35,7 +36,7 @@ export const LICENSE_TYPES: Array<{
     id: 'firearms',
     title: 'Firearm License',
     description: "Track firearm license renewals",
-    icon: FiTarget,
+    icon: GiPistolGun,
     fields: ["Make/Model", "Caliber", "Registration Number", "Expiry Date"],
   },
   {
@@ -49,8 +50,15 @@ export const LICENSE_TYPES: Array<{
     id: 'passports',
     title: 'Passport',
     description: "Track and manage your passport renewals",
-    icon: FiCreditCard,
+    icon: FiBook,
     fields: ["First Name", "Last Name", "Passport Number", "Expiry Date"],
+  },
+  {
+    id: 'tvlicenses',
+    title: 'TV License',
+    description: "Monitor your TV license renewals",
+    icon: BsTv,
+    fields: ["First Name", "Last Name", "License Number", "Expiry Date"],
   },
   {
     id: 'others',
@@ -58,14 +66,7 @@ export const LICENSE_TYPES: Array<{
     description: "Track any other important documents or licenses",
     icon: FiFile,
     fields: ["Description", "Document Type", "Expiry Date"],
-  },
-  {
-    id: 'tvlicenses',
-    title: 'TV License',
-    description: "Monitor your TV license renewals",
-    icon: FiTv,
-    fields: ["First Name", "Last Name", "License Number", "Expiry Date"],
-  },
+  }
 ] as const;
 
 export const TIER_LICENSE_LIMITS: Record<string, number> = {
