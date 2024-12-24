@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, memo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiClock, FiShield, FiFileText } from "react-icons/fi";
+import { FiClock, FiShield, FiFileText, FiDatabase } from "react-icons/fi";
 import Logo from "../assets/Remlic.png";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { supabase } from "../lib/supabase";
@@ -29,24 +29,43 @@ const Home = () => {
     () => [
       {
         icon: <FiClock className="h-6 w-6" />,
-        title: "Smart Reminders",
-        description: "Get timely notifications before your licenses expire",
-        path: "/dashboard",
-        highlight: "Email notifications (SMS & WhatsApp coming soon)",
+        title: "License Management Dashboard",
+        description: "Centralized view of all licenses and their statuses",
+        highlights: [
+          "Easy to use",
+          "Managing multiple licenses",
+          "Real-time license status updates"
+        ]
       },
       {
         icon: <FiFileText className="h-6 w-6" />,
-        title: "License Management",
-        description: "Track all your licenses and permits in one secure place",
-        path: "/dashboard",
-        highlight: "Multiple license types",
+        title: "Smart Notification System",
+        description: "Customizable email alerts for expiration dates",
+        highlights: [
+          "Customizable reminder intervals",
+          "Priority notifications for critical licenses",
+          "Customizable alert settings"
+        ]
       },
       {
         icon: <FiShield className="h-6 w-6" />,
-        title: "Premium Features",
-        description: "Access advanced features with our premium subscription",
-        path: "/price",
-        highlight: "Advanced features and priority support",
+        title: "Document Management",
+        description: "Secure storage for license documents",
+        highlights: [
+          "License information Tracking",
+          "Stay compliant with your licenses",
+          "Information is encrypted and secure"
+        ]
+      },
+      {
+        icon: <FiDatabase className="h-6 w-6" />,
+        title: "Asset Management",
+        description: "Track and manage your business assets",
+        highlights: [
+          "Asset Information Storage",
+          "Asset Renewal Tracking",
+          "Personal License Management"
+        ]
       },
     ],
     []
@@ -134,11 +153,11 @@ const Home = () => {
               Professional License Management
             </h1>
             <p className="text-xl text-white/70 max-w-2xl mx-auto mb-8">
-              South Africa's trusted platform for professional license and
-              permit management. Streamline your regulatory compliance, automate
-              renewal tracking, and secure your business documents all in one
-              powerful dashboard. Perfect for businesses of all sizes managing
-              multiple licenses and permits.
+              Track and manage your licenses with RemLic's comprehensive dashboard. 
+              <br />Get automated reminders, visual status tracking, and organized 
+              categorization for all your business licenses and permits. 
+              <br />
+              Perfect for managing Firearm licenses, vehicle registrations, Drivers Licenses, and more.
             </p>
 
             {/* Updated CTA buttons */}
@@ -148,7 +167,7 @@ const Home = () => {
                 className="px-8 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 
                   transition-all duration-200 font-medium shadow-lg shadow-indigo-500/30"
               >
-                View Documentation
+                Learn More
               </button>
               {!userStatus.isLoggedIn && (
                 <button
@@ -162,33 +181,52 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Features Grid - Updated */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          {/* Enhanced Feature Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
             {features.map((feature, index) => (
               <div
                 key={index}
-                onClick={() => navigate(feature.path)}
-                className="group bg-[#1f2937]/30 backdrop-blur-xl rounded-2xl p-8 border border-indigo-500/20 
-                  hover:border-indigo-500/40 hover:bg-[#1f2937]/40 transition-all duration-300 cursor-pointer"
+                className="group relative bg-gradient-to-b from-[#1f2937]/80 to-[#1f2937]/40 
+                  backdrop-blur-xl rounded-2xl p-8 border border-indigo-500/20 
+                  hover:border-indigo-500/50 transition-all duration-300
+                  hover:shadow-lg hover:shadow-indigo-500/10 hover:translate-y-[-2px]"
               >
                 <div
-                  className="h-12 w-12 bg-indigo-500/10 rounded-xl flex items-center justify-center 
-                  text-indigo-400 mb-4 group-hover:bg-indigo-500/20 transition-all duration-300"
+                  className="h-14 w-14 bg-gradient-to-tr from-indigo-600 to-indigo-400 
+                    rounded-xl flex items-center justify-center text-white mb-6 
+                    shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/40 
+                    group-hover:scale-105 transition-all duration-300"
                 >
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-indigo-400 transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-white/70 mb-4">{feature.description}</p>
-                <span className="text-sm text-indigo-400 font-medium">
-                  {feature.highlight}
-                </span>
+                <p className="text-white/70 mb-6 text-sm leading-relaxed">
+                  {feature.description}
+                </p>
+                <ul className="space-y-3">
+                  {feature.highlights.map((highlight, i) => (
+                    <li 
+                      key={i} 
+                      className="text-sm text-white/60 font-medium flex items-start
+                        group-hover:text-white/70 transition-colors"
+                    >
+                      <span className="text-indigo-400 mr-2 text-lg">•</span>
+                      {highlight}
+                    </li>
+                  ))}
+                </ul>
+                <div 
+                  className="absolute inset-0 rounded-2xl bg-gradient-to-b from-indigo-500/5 to-transparent 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                />
               </div>
             ))}
           </div>
 
-          {/* Why Choose Us Section */}
+
+          {/* Why Choose Us Section - Updated with Documentation content */}
           <div className="max-w-4xl mx-auto mt-16 mb-16">
             <h2 className="text-3xl font-bold text-white mb-8 text-center">
               Why Choose Our Platform?
@@ -196,36 +234,34 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white/5 rounded-xl p-6">
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Secure Storage
+                  Advanced Search
                 </h3>
                 <p className="text-white/70">
-                  Your data is encrypted and stored securely following industry
-                  best practices
+                  Easily find licenses using registration numbers, names, or ID numbers with our powerful search functionality
                 </p>
               </div>
               <div className="bg-white/5 rounded-xl p-6">
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Smart Notifications
+                  Visual Status Tracking
                 </h3>
                 <p className="text-white/70">
-                  Get timely reminders via email, with SMS and WhatsApp notifications coming soon
+                  Clear visual indicators show license status: valid (green), expiring soon (yellow), or expired (red)
                 </p>
               </div>
               <div className="bg-white/5 rounded-xl p-6">
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Easy Management
+                  Organized Categories
                 </h3>
                 <p className="text-white/70">
-                  Intuitive interface to manage all your licenses and permits in
-                  one place
+                  Licenses are grouped by type for easy management and monitoring, with customizable notification settings per category
                 </p>
               </div>
               <div className="bg-white/5 rounded-xl p-6">
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Priority Support
+                  Flexible Pricing
                 </h3>
                 <p className="text-white/70">
-                  Our dedicated support team is always ready to assist you
+                  Plans starting from R150/year for basic needs up to R1,000/year for unlimited licenses with API access
                 </p>
               </div>
             </div>

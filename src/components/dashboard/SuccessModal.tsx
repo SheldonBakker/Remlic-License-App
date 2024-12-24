@@ -12,10 +12,15 @@ interface SuccessModalProps {
 
 const SuccessModal: React.FC<SuccessModalProps> = ({ title, message, onClose, onRefreshData }) => {
   const handleClose = useCallback(async () => {
-    if (onRefreshData) {
-      await onRefreshData();
+    try {
+      if (onRefreshData) {
+        await onRefreshData();
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      onClose();
     }
-    onClose();
   }, [onClose, onRefreshData]);
 
   // Auto-close after 5 seconds
@@ -24,7 +29,6 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ title, message, onClose, on
       handleClose();
     }, 5000);
 
-    // Cleanup timer on unmount
     return () => clearTimeout(timer);
   }, [handleClose]);
 

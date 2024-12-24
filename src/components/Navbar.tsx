@@ -133,13 +133,24 @@ const Navbar = memo(() => {
             aria-label="Mobile navigation"
           >
             <div
-              className="fixed inset-0 top-16 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 top-16 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out"
               aria-hidden="true"
               onClick={() => setIsMenuOpen(false)}
             />
 
             <div className="absolute inset-x-0 top-full">
-              <div className="mx-4 my-2 overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900/85 to-black/85 backdrop-blur-xl border border-indigo-500/20 shadow-2xl">
+              <div className={`
+                mx-4 my-2 
+                overflow-hidden 
+                rounded-2xl 
+                bg-gradient-to-b from-slate-900/85 to-black/85 
+                backdrop-blur-xl 
+                border border-indigo-500/20 
+                shadow-2xl
+                transition-all duration-300 ease-out
+                transform origin-top
+                ${isMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'}
+              `}>
                 <div className="relative py-4 flex flex-col space-y-3">
                   {navigationItems.map((item) => {
                     if (item.requiresAuth && !isLoggedIn) return null;

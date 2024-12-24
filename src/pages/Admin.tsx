@@ -389,8 +389,24 @@ const Admin = () => {
   };
 
   const confirmToggleMaintenance = async () => {
+    if (!supabaseClient) return;
+    
     setShowMaintenanceConfirm(false);
     await toggleMaintenance();
+    
+    try {
+      const { data, error } = await supabaseClient
+        .from("system_settings")
+        .select("value")
+        .eq("key", "maintenance_mode")
+        .single();
+
+      if (error) throw error;
+      setIsMaintenance(data?.value || false);
+    } catch (error) {
+      console.error("Error fetching maintenance status:", error);
+      toast.error("Failed to update maintenance status");
+    }
   };
 
   useEffect(() => {
@@ -686,8 +702,8 @@ const Admin = () => {
                 onClick={handleMaintenanceClick}
                 className={`px-6 py-3 rounded-lg transition-all duration-200 flex items-center gap-3 font-medium
                   ${isMaintenance 
-                    ? "bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20"
-                    : "bg-indigo-500 text-white hover:bg-indigo-600"
+                    ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                    : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20"
                   }`}
               >
                 <FiSettings className="h-5 w-5" />
@@ -888,7 +904,11 @@ const Admin = () => {
               </button>
               <button
                 onClick={confirmToggleMaintenance}
-                className="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600"
+                className={`px-4 py-2 rounded-lg text-white hover:bg-opacity-90 transition-all duration-200
+                  ${isMaintenance 
+                    ? "bg-emerald-500 hover:bg-emerald-600" 
+                    : "bg-red-500 hover:bg-red-600"
+                  }`}
               >
                 Confirm
               </button>

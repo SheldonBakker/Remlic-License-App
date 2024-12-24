@@ -21,6 +21,7 @@ interface AddLicenseModalProps {
   licenseTypes: typeof LICENSE_TYPES;
   userTier: string | null;
   currentLicenses: LicenseGroup;
+  onAdd: () => Promise<void>;
 }
 
 export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
@@ -28,7 +29,8 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
   onClose,
   licenseTypes,
   userTier,
-  currentLicenses
+  currentLicenses,
+  onAdd
 }) => {
   const [selectedType, setSelectedType] = React.useState<string | null>(null);
 
@@ -44,7 +46,8 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
     setSelectedType(typeId);
   };
 
-  const handleFormClose = () => {
+  const handleFormClose = async () => {
+    await onAdd();
     setSelectedType(null);
     onClose();
   };

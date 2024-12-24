@@ -63,7 +63,7 @@ const Terms = () => {
               hover:border-indigo-500/40 transition-all duration-300"
             >
               <div className="flex items-center justify-between">
-                <p className="text-white/70">Last Updated: March 2024</p>
+                <p className="text-white/70">Last Updated: October 2024</p>
                 <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-sm rounded-full">
                   Version 1.0
                 </span>
@@ -100,12 +100,12 @@ const Terms = () => {
           {/* Navigation Buttons */}
           <div className="mt-12 flex justify-center space-x-4">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/privacy')}
               className="flex items-center px-8 py-3 bg-indigo-600 text-white rounded-xl 
                 hover:bg-indigo-700 transition-all duration-200 font-medium group"
             >
               <FiArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-              Back to Previous Page
+              Privacy Policy
             </button>
           </div>
         </div>

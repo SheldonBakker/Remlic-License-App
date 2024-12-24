@@ -12,12 +12,14 @@ import {
   FiFileText,
   FiStar,
   FiHelpCircle,
+  FiArrowUp,
 } from "react-icons/fi";
 import StructuredData from "../components/StructuredData";
 import * as React from "react";
 import { Helmet } from 'react-helmet';
 import { Link as ScrollLink } from 'react-scroll';
 import { LICENSE_TYPES } from '../constants/licenses';
+import { Link } from 'react-router-dom';
 
 const Documentation = () => {
   const licenseTypes = LICENSE_TYPES.map(type => ({
@@ -54,31 +56,31 @@ const Documentation = () => {
       id: "basic",
       title: "Tier 1",
       price: "R150/year",
-      features: ["2 licenses per category", "Email notifications", "Basic dashboard"],
+      features: ["2 Licenses"],
     },
     {
       id: "standard",
       title: "Tier 2",
       price: "R250/year",
-      features: ["8 licenses per category", "Priority support", "Advanced dashboard"],
+      features: ["8 Licenses"],
     },
     {
       id: "professional",
       title: "Tier 3",
       price: "R350/year",
-      features: ["12 licenses per category", "Custom notifications", "Analytics"],
+      features: ["12 Licenses"],
     },
     {
       id: "advanced",
       title: "Tier 4",
       price: "R550/year",
-      features: ["30 licenses per category", "Priority support", "Advanced features"],
+      features: ["30 Licenses", "Priority support"],
     },
     {
       id: "premium",
       title: "Premium",
       price: "R1,000/year",
-      features: ["Unlimited licenses", "API access", "Enterprise support"],
+      features: ["Unlimited licenses", "API access"],
     },
   ];
 
@@ -174,9 +176,43 @@ const Documentation = () => {
     },
     {
       question: "What information can you see?",
-      answer: "All information is encrypted except for your profile information which includes: First Name, Last Name, ID number, Contact Number, Email, and what package you have. Hashing means the data is converted into a scrambled code that can't be reversed or read, ensuring your sensitive information remains secure and private."
+      answer: "All information is encrypted except for your profile information which includes: First Name, Last Name, ID number, Contact Number, Email, and what package you have."
     }
   ];
+
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    const duration = 1000; // Increase this value for slower scrolling (in milliseconds)
+    const start = window.pageYOffset;
+    const startTime = 'now' in window.performance ? performance.now() : new Date().getTime();
+
+    const easeInOutQuad = (t: number): number => {
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    };
+
+    const scroll = () => {
+      const now = 'now' in window.performance ? performance.now() : new Date().getTime();
+      const time = Math.min(1, ((now - startTime) / duration));
+      
+      window.scroll(0, Math.ceil(start * (1 - easeInOutQuad(time))));
+      
+      if (time < 1) {
+        requestAnimationFrame(scroll);
+      }
+    };
+
+    requestAnimationFrame(scroll);
+  };
 
   return (
     <>
@@ -199,7 +235,7 @@ const Documentation = () => {
       <main className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81]">
         <nav className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-indigo-500/20 shadow-lg shadow-slate-900/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center justify-center h-16 overflow-x-auto scrollbar-hide">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 {navigationSections.map((section) => (
                   <ScrollLink
@@ -288,8 +324,9 @@ const Documentation = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {subscriptionTiers.map((tier) => (
-                <div 
+                <Link 
                   key={tier.id} 
+                  to="/prices"
                   className="group relative bg-white/5 rounded-xl p-6 border border-indigo-500/20
                     hover:bg-white/10 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10
                     transition-all duration-300 ease-out"
@@ -318,7 +355,7 @@ const Documentation = () => {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
@@ -568,6 +605,21 @@ const Documentation = () => {
           </section>
         </div>
       </main>
+
+      <button
+        onClick={scrollToTop}
+        className={`
+          fixed bottom-8 right-8 p-3 rounded-full
+          bg-indigo-600 text-white shadow-lg
+          hover:bg-indigo-700 transition-all duration-300
+          focus:outline-none focus:ring-2 focus:ring-indigo-500/40
+          ${showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'}
+          z-50
+        `}
+        aria-label="Scroll to top"
+      >
+        <FiArrowUp className="h-6 w-6" />
+      </button>
     </>
   );
 };

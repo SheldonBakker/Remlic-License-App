@@ -1,6 +1,9 @@
-import { FiLock, FiDatabase, FiUserCheck, FiShield } from "react-icons/fi";
+import { FiLock, FiDatabase, FiUserCheck, FiShield, FiArrowLeft } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 const Privacy = () => {
+  const navigate = useNavigate();
+  
   const privacyPoints = [
     {
       icon: <FiLock className="h-6 w-6" />,
@@ -110,13 +113,25 @@ const Privacy = () => {
             <p>
               If you have any questions about our privacy policy or how we
               handle your data, please contact our privacy team at
-              privacy@yourdomain.com
+              support@remlic.com
             </p>
           </section>
 
           <section className="pt-8 text-sm">
             <p>Last updated: {new Date().toLocaleDateString()}</p>
           </section>
+        </div>
+
+        {/* Navigation Button */}
+        <div className="mt-12 flex justify-center space-x-4">
+          <button
+            onClick={() => navigate('/terms')}
+            className="flex items-center px-8 py-3 bg-indigo-600 text-white rounded-xl 
+              hover:bg-indigo-700 transition-all duration-200 font-medium group"
+          >
+            <FiArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+            Terms of Service
+          </button>
         </div>
       </div>
     </div>
