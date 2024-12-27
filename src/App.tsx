@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import { AuthChangeEvent, Session } from "@supabase/gotrue-js";
 import Documentation from "./pages/Documentation";
 import { HelmetProvider } from 'react-helmet-async';
+import Offline from './components/Offline';
 const queryClient = new QueryClient();
 
 // Lazy load all pages
@@ -250,6 +251,7 @@ const App: React.FC = () => {
             </Suspense>
           </div>
           <Footer />
+          <Offline />
         </div>
       </QueryClientProvider>
     </HelmetProvider>

@@ -57,10 +57,6 @@ interface DashState {
   };
   editingLicense: Contract | null;
   licenseToDelete: Contract | null;
-  pagination: {
-    currentPage: number;
-    itemsPerPage: number;
-  };
   isGridCollapsed: boolean;
   isSearchOpen: boolean;
 }
@@ -76,8 +72,6 @@ type DashAction =
   | { type: 'TOGGLE_MODAL'; modal: 'add' | 'renew' | 'delete'; value: boolean }
   | { type: 'SET_EDITING_LICENSE'; payload: Contract | null }
   | { type: 'SET_LICENSE_TO_DELETE'; payload: Contract | null }
-  | { type: 'SET_PAGE'; payload: number }
-  | { type: 'SET_ITEMS_PER_PAGE'; payload: number }
   | { type: 'TOGGLE_GRID_COLLAPSE'; payload: boolean }
   | { type: 'TOGGLE_SEARCH'; payload: boolean };
 
@@ -106,10 +100,6 @@ const dashReducer = (state: DashState, action: DashAction): DashState => {
       return { ...state, editingLicense: action.payload };
     case 'SET_LICENSE_TO_DELETE':
       return { ...state, licenseToDelete: action.payload };
-    case 'SET_PAGE':
-      return { ...state, pagination: { ...state.pagination, currentPage: action.payload } };
-    case 'SET_ITEMS_PER_PAGE':
-      return { ...state, pagination: { ...state.pagination, itemsPerPage: action.payload } };
     case 'TOGGLE_GRID_COLLAPSE':
       return { ...state, isGridCollapsed: action.payload };
     case 'TOGGLE_SEARCH':
@@ -119,15 +109,15 @@ const dashReducer = (state: DashState, action: DashAction): DashState => {
   }
 };
 
-const CARD_WIDTH = 400; // Base card width
-const CARD_HEIGHT = 300; // Base card height for desktop
-const MOBILE_CARD_HEIGHT = 300; // Smaller height for mobile
-const GRID_GAP = 16; // Horizontal gap between cards
-const VERTICAL_GAP = 80; // Desktop vertical gap
-const MOBILE_VERTICAL_GAP = 140; // Mobile vertical gap
+// Update these constants for better mobile spacing
+const CARD_HEIGHT = 320;
+const CARD_WIDTH = 400;
+const GRID_GAP = 16;
+const VERTICAL_GAP = 100;
+const MOBILE_VERTICAL_GAP = 80; // Increased mobile vertical gap
 const EFFECTIVE_CARD_WIDTH = CARD_WIDTH + GRID_GAP;
 const EFFECTIVE_CARD_HEIGHT = CARD_HEIGHT + VERTICAL_GAP;
-const MOBILE_EFFECTIVE_CARD_HEIGHT = MOBILE_CARD_HEIGHT + MOBILE_VERTICAL_GAP;
+const MOBILE_EFFECTIVE_CARD_HEIGHT = CARD_HEIGHT + MOBILE_VERTICAL_GAP + 40; // Added extra padding for mobile
 
 // 1. Add debouncing for search
 const useDebounce = (value: string, delay: number) => {
@@ -192,10 +182,6 @@ const Dash: React.FC = () => {
     },
     editingLicense: null,
     licenseToDelete: null,
-    pagination: {
-      currentPage: 1,
-      itemsPerPage: 12
-    },
     isGridCollapsed: true,
     isSearchOpen: false,
   });
@@ -220,10 +206,7 @@ const Dash: React.FC = () => {
           return;
         }
 
-        const limit = state.pagination.itemsPerPage;
-        const offset = (state.pagination.currentPage - 1) * limit;
-
-        // Fetch user profile and paginated licenses
+        // Fetch user profile and all licenses
         const [profileResult, ...results] = await Promise.all([
           supabaseInstance
             .from('profiles')
@@ -233,17 +216,14 @@ const Dash: React.FC = () => {
           ...['vehicles', 'drivers', 'firearms', 'prpd', 'works', 'other_documents', 'passports', 'tv_licenses']
             .map(table => supabaseInstance
               .from(table)
-              .select('*', { count: 'exact' })
+              .select('*')
               .eq('user_id', session.user.id)
-              .range(offset, offset + limit - 1)
             )
         ]);
 
-        // Update user profile data
+        // Update state with all results
         dispatch({ type: 'SET_USER_TIER', payload: profileResult.data?.type_of_user || null });
         dispatch({ type: 'SET_SUBSCRIPTION', payload: profileResult.data?.subscription_status === 'active' });
-
-        // Update licenses data
         dispatch({
           type: 'SET_LICENSES',
           payload: {
@@ -267,11 +247,7 @@ const Dash: React.FC = () => {
     };
 
     initializeDashboard();
-  }, [
-    navigate,
-    state.pagination.currentPage,
-    state.pagination.itemsPerPage
-  ]); // Add pagination dependencies
+  }, [navigate]);
 
   // Handlers
   const handleAddLicense = useCallback(() => {
@@ -314,7 +290,7 @@ const Dash: React.FC = () => {
         return;
       }
 
-      // Add profile fetch to the requests
+      // Add DISTINCT ON to ensure unique records
       const [profileResult, ...results]: [ProfileResult, ...DBResult[]] = await Promise.all([
         supabaseInstance
           .from('profiles')
@@ -325,28 +301,37 @@ const Dash: React.FC = () => {
         supabaseInstance.from('drivers').select('*').eq('user_id', session.user.id),
         supabaseInstance.from('firearms').select('*').eq('user_id', session.user.id),
         supabaseInstance.from('prpd').select('*').eq('user_id', session.user.id),
-        supabaseInstance.from('works').select('*').eq('user_id', session.user.id),
+        // Add DISTINCT ON for works table to prevent duplicates
+        supabaseInstance
+          .from('works')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('id', { ascending: true }),
         supabaseInstance.from('other_documents').select('*').eq('user_id', session.user.id),
         supabaseInstance.from('passports').select('*').eq('user_id', session.user.id),
         supabaseInstance.from('tv_licenses').select('*').eq('user_id', session.user.id)
       ]);
 
-      // Now profileResult is defined
+      // Ensure unique records by ID before updating state
+      const uniqueWorks = results[4]?.data ? 
+        Array.from(new Map(results[4].data.map(item => [item.id, item])).values()) 
+        : [];
+
       dispatch({ type: 'SET_USER_TIER', payload: profileResult.data?.type_of_user || null });
       dispatch({ type: 'SET_SUBSCRIPTION', payload: profileResult.data?.subscription_status === 'active' });
 
-      // Update licenses data
+      // Update licenses data with deduplicated works
       dispatch({
         type: 'SET_LICENSES',
         payload: {
-          vehicles: results?.[0]?.data ?? [],
-          drivers: results?.[1]?.data ?? [],
-          firearms: results?.[2]?.data ?? [],
-          prpds: results?.[3]?.data ?? [],
-          works: results?.[4]?.data ?? [],
-          others: results?.[5]?.data ?? [],
-          passports: results?.[6]?.data ?? [],
-          tvlicenses: results?.[7]?.data ?? []
+          vehicles: results[0]?.data ?? [],
+          drivers: results[1]?.data ?? [],
+          firearms: results[2]?.data ?? [],
+          prpds: results[3]?.data ?? [],
+          works: uniqueWorks,
+          others: results[5]?.data ?? [],
+          passports: results[6]?.data ?? [],
+          tvlicenses: results[7]?.data ?? []
         }
       });
 
@@ -364,12 +349,10 @@ const Dash: React.FC = () => {
 
   const handleSectionSelect = useCallback((section: string) => {
     dispatch({ type: 'SET_SECTION', payload: section === state.selectedSection ? null : section });
-    dispatch({ type: 'SET_PAGE', payload: 1 }); // Reset to first page
   }, [state.selectedSection]);
 
   const handleSearch = useCallback((value: string) => {
     dispatch({ type: 'SET_SEARCH', payload: value });
-    dispatch({ type: 'SET_PAGE', payload: 1 });
   }, []);
 
   const handleGridCollapse = useCallback(() => {
@@ -439,9 +422,7 @@ const Dash: React.FC = () => {
   // Optimize renderLicenseCards with better dependency tracking
   const renderLicenseCards = useMemo(() => {
     const selectedType = state.selectedSection;
-    const entries = Object.entries(getFilteredLicenses);
-    
-    const allCards = entries
+    return Object.entries(getFilteredLicenses)
       .filter(([type]) => !selectedType || type === selectedType)
       .flatMap(([type, items]) => 
         items.map((license: Contract) => ({
@@ -450,22 +431,7 @@ const Dash: React.FC = () => {
           id: `${type}-${license.id}`
         }))
       );
-
-    // Calculate pagination
-    const startIndex = (state.pagination.currentPage - 1) * state.pagination.itemsPerPage;
-    const endIndex = startIndex + state.pagination.itemsPerPage;
-    
-    return {
-      cards: allCards.slice(startIndex, endIndex),
-      totalPages: Math.ceil(allCards.length / state.pagination.itemsPerPage),
-      totalItems: allCards.length
-    };
-  }, [
-    getFilteredLicenses,
-    state.selectedSection,
-    state.pagination.currentPage,
-    state.pagination.itemsPerPage
-  ]);
+  }, [getFilteredLicenses, state.selectedSection]);
 
   const [gridRef, gridInView] = useProgressiveLoading();
   const [cardsRef, cardsInView] = useProgressiveLoading({
@@ -592,7 +558,7 @@ const Dash: React.FC = () => {
                 {({ height, width }) => {
                   const isMobile = width < 768;
                   const columnCount = isMobile ? 1 : Math.max(1, Math.floor(width / EFFECTIVE_CARD_WIDTH));
-                  const rowCount = Math.ceil(renderLicenseCards.cards.length / columnCount);
+                  const rowCount = Math.ceil(renderLicenseCards.length / columnCount);
                   const mobileCardWidth = isMobile ? width : EFFECTIVE_CARD_WIDTH;
                   
                   return (
@@ -605,7 +571,7 @@ const Dash: React.FC = () => {
                       rowHeight={isMobile ? MOBILE_EFFECTIVE_CARD_HEIGHT : EFFECTIVE_CARD_HEIGHT}
                       width={width}
                       itemData={{
-                        cards: renderLicenseCards.cards,
+                        cards: renderLicenseCards,
                         columnCount,
                         onRenew: handleRenewLicense,
                         onDelete: handleDeleteLicense,
@@ -621,11 +587,14 @@ const Dash: React.FC = () => {
                         return (
                           <div style={{
                             ...style,
-                            padding: `${isMobile ? MOBILE_VERTICAL_GAP / 2 : VERTICAL_GAP / 2}px ${isMobile ? 16 : GRID_GAP / 2}px`,
+                            padding: `${isMobile ? MOBILE_VERTICAL_GAP / 2 : VERTICAL_GAP / 2}px ${isMobile ? 12 : GRID_GAP / 2}px`,
                             width: isMobile ? '100%' : EFFECTIVE_CARD_WIDTH,
-                            height: isMobile ? MOBILE_EFFECTIVE_CARD_HEIGHT : EFFECTIVE_CARD_HEIGHT
+                            height: isMobile ? MOBILE_EFFECTIVE_CARD_HEIGHT : EFFECTIVE_CARD_HEIGHT,
+                            touchAction: 'manipulation',
+                            WebkitTapHighlightColor: 'transparent',
+                            zIndex: 1
                           }}>
-                            <div className="h-full w-full">
+                            <div className={`h-full w-full relative ${isMobile ? 'mb-4' : ''}`}>
                               <MemoizedContractCard
                                 contract={license}
                                 type={type}
@@ -646,32 +615,6 @@ const Dash: React.FC = () => {
                 <LoadingSpinner text="Loading licenses..." />
               </div>
             )}
-          </div>
-        )}
-
-        {renderLicenseCards.totalPages > 1 && (
-          <div className="mt-6 flex justify-center items-center gap-2">
-            <button
-              onClick={() => dispatch({ type: 'SET_PAGE', payload: state.pagination.currentPage - 1 })}
-              disabled={state.pagination.currentPage === 1}
-              className="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 
-                hover:bg-indigo-500/20 transition-all duration-200 
-                disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="text-gray-400">
-              Page {state.pagination.currentPage} of {renderLicenseCards.totalPages}
-            </span>
-            <button
-              onClick={() => dispatch({ type: 'SET_PAGE', payload: state.pagination.currentPage + 1 })}
-              disabled={state.pagination.currentPage >= renderLicenseCards.totalPages}
-              className="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 
-                hover:bg-indigo-500/20 transition-all duration-200 
-                disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
           </div>
         )}
       </div>

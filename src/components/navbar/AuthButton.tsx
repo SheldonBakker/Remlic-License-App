@@ -10,16 +10,17 @@ const AuthButton = memo(({ isLoggedIn, onLogout, isMobile = false, onClick }: {
   const baseClasses = `
     ${isMobile ? 'w-full' : ''} 
     bg-gradient-to-r from-blue-600 to-purple-600 
-    px-5 py-2 rounded-xl font-medium 
+    px-6 py-2.5 rounded-xl font-medium 
     hover:from-blue-700 hover:to-purple-700 
-    transition-all duration-300 transform 
-    hover:scale-105 
-    active:scale-95 
-    shadow-lg hover:shadow-blue-500/25 
-    hover:ring-2 hover:ring-blue-500/20
+    transition-all duration-300 
+    hover:scale-102 
+    active:scale-98 
+    shadow-lg hover:shadow-blue-500/30
+    hover:ring-2 hover:ring-blue-500/25
     border border-white/10
     focus:outline-none focus:ring-2 focus:ring-blue-500/40
     focus:ring-offset-2 focus:ring-offset-gray-900
+    backdrop-blur-sm
   `;
 
   if (isLoggedIn) {

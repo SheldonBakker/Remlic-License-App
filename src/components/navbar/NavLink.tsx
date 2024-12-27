@@ -18,13 +18,13 @@ const NavLink = memo(({ item, isLoggedIn, onClick }: {
         relative w-full inline-block font-medium transition-all duration-300 
         after:content-[''] after:absolute after:w-full after:h-0.5 
         after:bottom-0 after:left-0 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600 
-        after:transition-transform
+        after:transition-all after:duration-500 after:ease-in-out
         ${isActive 
           ? 'text-white after:scale-x-100' 
-          : 'text-gray-300 after:scale-x-0 hover:text-white hover:after:scale-x-100'
+          : 'text-gray-300/90 after:scale-x-0 hover:text-white hover:after:scale-x-100'
         }
         focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-1 focus:ring-offset-transparent
-        rounded-md py-2 px-3
+        rounded-lg py-2 px-4 hover:bg-white/5
       `}
       to={item.path}
       onClick={onClick}

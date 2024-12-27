@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from 'react';
 import { Dialog } from '@mui/material';
 import { FiX } from 'react-icons/fi';
@@ -20,51 +19,52 @@ export const RenewLicenseModal: React.FC<RenewLicenseModalProps> = ({
   onRenew,
 }) => {
   const [newExpiryDate, setNewExpiryDate] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (open) {
+      setNewExpiryDate('');
+      setIsSubmitting(false);
+    }
+  }, [open]);
 
   const handleRenew = async () => {
-    if (!newExpiryDate || !license?.id) {
+    if (!newExpiryDate || !license?.id || isSubmitting) {
       toast.error('Please select an expiry date');
       return;
     }
 
-    setIsLoading(true);
-
-    const type = license.type;
-    const tableMapping: { [key: string]: string } = {
-      vehicles: 'vehicles',
-      drivers: 'drivers',
-      firearms: 'firearms',
-      prpds: 'prpd',
-      works: 'works',
-      others: 'other_documents',
-      passports: 'passports',
-      tvlicenses: 'tv_licenses'
-    };
-
-    const tableName = tableMapping[type];
-    if (!tableName) {
-      toast.error(`Invalid license type: ${type}`);
-      setIsLoading(false);
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
       const client = await supabase;
+      const tableMapping: Record<string, string> = {
+        vehicles: 'vehicles',
+        drivers: 'drivers',
+        firearms: 'firearms',
+        prpd: 'prpds',
+        prpds: 'prpd',
+        works: 'works',
+        others: 'other_documents',
+        passports: 'passports',
+        tvlicenses: 'tv_licenses'
+      };
+
       const { error } = await client
-        .from(tableName)
+        .from(tableMapping[license.type])
         .update({ expiry_date: newExpiryDate })
         .eq('id', license.id);
 
       if (error) throw error;
 
       toast.success('License renewed successfully');
-      onRenew();
+      await onRenew();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to renew license');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to renew license');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -133,13 +133,13 @@ export const RenewLicenseModal: React.FC<RenewLicenseModalProps> = ({
                 console.log('Renew button clicked');
                 handleRenew();
               }}
-              disabled={!newExpiryDate || isLoading}
+              disabled={!newExpiryDate || isSubmitting}
               className="flex-1 py-2 px-4 rounded-lg
                 bg-green-500/10 text-green-400 border border-green-500/20
                 hover:bg-green-500/20 hover:border-green-500/40 transition-all duration-200
                 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Renewing...' : 'Renew License'}
+              {isSubmitting ? 'Renewing...' : 'Renew License'}
             </button>
           </div>
         </div>

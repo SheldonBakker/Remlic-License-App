@@ -5,6 +5,7 @@ export interface Contract {
   expiry_date: string;
   created_at: string;
   [key: string]: any;  // For additional properties
+  notifications_paused?: boolean;
 }
 
 export interface LicenseGroup {

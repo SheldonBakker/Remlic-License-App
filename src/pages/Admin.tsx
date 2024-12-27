@@ -471,14 +471,16 @@ const Admin = () => {
       setIsUpdatingUserType(true);
       
       // First check if the target user is an admin
-      const { data: targetUser } = await supabaseClient
+      const { data: targetUser, error: userError } = await supabaseClient
         .from('profiles')
         .select('type_of_user, email')
         .eq('id', userId)
         .single();
 
+      if (userError) throw userError;
+
       if (targetUser?.type_of_user === 'admin') {
-        alert('Admin user types cannot be modified');
+        toast.error('Admin user types cannot be modified');
         return;
       }
 
@@ -502,12 +504,16 @@ const Admin = () => {
           }
         });
 
-      if (logError) throw logError;
+      if (logError) {
+        console.error('Error logging admin action:', logError);
+        // Don't throw here as the main action succeeded
+      }
       
       await fetchUsers();
+      toast.success('User type updated successfully');
     } catch (error) {
       console.error('Error updating user type:', error);
-      alert('Failed to update user type');
+      toast.error('Failed to update user type');
     } finally {
       setIsUpdatingUserType(false);
     }

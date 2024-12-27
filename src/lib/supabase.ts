@@ -6,11 +6,20 @@ let supabaseInstance: SupabaseClient | null = null
 async function getSupabaseClient() {
   if (supabaseInstance) return supabaseInstance
   
-  // Use environment variables for both production and development
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  let config
   
-  supabaseInstance = createClient(supabaseUrl, supabaseKey)
+  if (import.meta.env.DEV) {
+    config = {
+      SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+      SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY
+    }
+  } else {
+    // Fetch config from PHP endpoint in production
+    const response = await fetch('/api/get-config.php') 
+    config = await response.json()
+  }
+  
+  supabaseInstance = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY)
   return supabaseInstance
 }
 

@@ -18,40 +18,41 @@ export const DeleteLicenseModal: React.FC<DeleteLicenseModalProps> = ({
   license,
   onDelete,
 }) => {
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
   const handleDelete = async () => {
-    if (!license?.id || !license?.type) {
-      toast.error('Invalid license data');
-      return;
-    }
+    if (!license?.id || !license?.type || isDeleting) return;
 
-    const tableMapping: { [key: string]: string } = {
-      vehicles: 'vehicles',
-      drivers: 'drivers',
-      firearms: 'firearms',
-      prpds: 'prpd',
-      works: 'works',
-      others: 'other_documents',
-      passports: 'passports',
-      tvlicenses: 'tv_licenses'
-    };
-
-    const tableName = tableMapping[license.type];
-    if (!tableName) {
-      toast.error(`Invalid license type: ${license.type}`);
-      return;
-    }
+    setIsDeleting(true);
 
     try {
-      const { error } = await (await supabase).from(tableName).delete().eq('id', license.id);
+      const client = await supabase;
+      const tableMapping: Record<string, string> = {
+        vehicles: 'vehicles',
+        drivers: 'drivers',
+        firearms: 'firearms',
+        prpds: 'prpd',
+        works: 'works',
+        others: 'other_documents',
+        passports: 'passports', 
+        tvlicenses: 'tv_licenses'
+      };
+
+      const { error } = await client
+        .from(tableMapping[license.type])
+        .delete()
+        .eq('id', license.id);
 
       if (error) throw error;
-      
+
       onDelete();
       onClose();
       toast.success('License deleted successfully');
     } catch (error) {
       console.error('Error deleting license:', error);
       toast.error('Failed to delete license');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -100,11 +101,13 @@ export const DeleteLicenseModal: React.FC<DeleteLicenseModalProps> = ({
           </button>
           <button
             onClick={handleDelete}
+            disabled={isDeleting}
             className="flex-1 py-2 px-4 rounded-lg
               bg-red-500/10 text-red-400 border border-red-500/20
-              hover:bg-red-500/20 hover:border-red-500/40 transition-all duration-200"
+              hover:bg-red-500/20 hover:border-red-500/40 transition-all duration-200
+              disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Delete License
+            {isDeleting ? 'Deleting...' : 'Delete License'}
           </button>
         </div>
       </div>
