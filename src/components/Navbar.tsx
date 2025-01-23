@@ -168,7 +168,7 @@ const Navbar = memo(() => {
                   <div className="px-4 pt-2">
                     <AuthButton 
                       isLoggedIn={isLoggedIn} 
-                      onLogout={handleLogout} 
+                      onLogout={handleLogout}
                       isMobile 
                       onClick={() => setIsMenuOpen(false)}
                     />

@@ -129,43 +129,61 @@ const Register = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
+    
     try {
       const supabaseClient = await supabase;
+      
       const { data: authData, error } = await supabaseClient.auth.signUp({
         email: data.email.trim().toLowerCase(),
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: null,
+            last_name: null,
+            type_of_user: 'registered',
+            subscription_status: 'inactive',
+          }
         },
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      if (authData.user) {
+      if (authData?.user) {
+        // Create profile in profiles table
+        const { error: profileError } = await supabaseClient
+          .from('profiles')
+          .insert([
+            {
+              id: authData.user.id,
+              email: authData.user.email,
+              type_of_user: 'registered',
+              subscription_status: 'inactive',
+            }
+          ]);
+
+        if (profileError) throw profileError;
+
         setModalState({
           isOpen: true,
           status: "success",
-          message: "Please check your email to confirm your account!",
+          message: "Registration successful! Please check your email to confirm your account.",
         });
       }
     } catch (error: any) {
-      console.error("Full registration error:", error);
-
+      console.error('Registration error:', error);
+      
       let errorMessage = "Registration failed. Please try again later.";
 
-      if (error?.status === 500) {
-        errorMessage = "Server error. Please try again later.";
+      if (error?.message?.toLowerCase().includes("already registered")) {
+        errorMessage = "This email is already registered. Please try logging in.";
+      } else if (error?.message?.toLowerCase().includes("rate limit")) {
+        errorMessage = "Too many attempts. Please try again later.";
+      } else if (error?.message?.toLowerCase().includes("confirmation email")) {
+        errorMessage = "Account created but there was an issue sending the confirmation email. Please contact support.";
+      } else if (error?.status === 503) {
+        errorMessage = "The service is temporarily unavailable. Please try again later.";
       } else if (error?.message) {
-        if (error.message.includes("already registered")) {
-          errorMessage =
-            "This email is already registered. Please try logging in.";
-        } else if (error.message.includes("rate limit")) {
-          errorMessage = "Too many attempts. Please try again later.";
-        } else {
-          errorMessage = error.message;
-        }
+        errorMessage = error.message;
       }
 
       setModalState({
