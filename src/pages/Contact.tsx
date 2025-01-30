@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiMail, FiPhone } from "react-icons/fi";
+import { FiMail } from "react-icons/fi";
 
 // Move interfaces and constants outside component
 interface ContactFormData {
@@ -26,18 +26,6 @@ const CONTACT_INFO = [
         className="hover:text-indigo-400 transition-colors"
       >
         support@remlic.co.za
-      </a>
-    ),
-  },
-  {
-    icon: <FiPhone className="h-6 w-6" />,
-    title: "Phone",
-    details: (
-      <a
-        href="tel:+27681501196"
-        className="hover:text-indigo-400 transition-colors"
-      >
-        +27 (0) 68 150 1196
       </a>
     ),
   },
