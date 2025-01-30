@@ -278,7 +278,7 @@ const ReminderSettings = () => {
     }));
   };
 
-  const handleSave = (type: LicenseType) => {
+  const handleSave = (type: LicenseType): void => {
     const settings = typeSettings[type];
     if (!settings) {
       toast.error("Invalid settings");
@@ -287,21 +287,19 @@ const ReminderSettings = () => {
 
     const { reminder_days_before, reminder_frequency } = settings;
 
+    // Use the existing frequency if not explicitly changed
+    const frequency = reminder_frequency || typeSettings[type]?.reminder_frequency || "weekly";
+
     // Validate before saving
     if (!reminder_days_before || reminder_days_before < 1) {
       toast.error("Please enter a valid number of days");
       return;
     }
 
-    if (!reminder_frequency) {
-      toast.error("Please select a reminder frequency");
-      return;
-    }
-
     handleReminderSettingsChange(
       type,
       reminder_days_before,
-      reminder_frequency
+      frequency
     );
   };
 
