@@ -10,6 +10,7 @@ import PaystackPop, {
 } from "@paystack/inline-js";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { TIER_LICENSE_LIMITS } from '../constants/licenses';
 
 interface ExtendedPaystackOptions extends PaystackOptions {
   plan?: string;
@@ -24,7 +25,25 @@ interface Config {
   PAYSTACK_TIER3_PLAN_CODE: string;
   PAYSTACK_TIER4_PLAN_CODE: string;
   PAYSTACK_PREMIUM_PLAN_CODE: string;
+  PAYSTACK_TIER1_MONTHLY_PLAN_CODE: string;
+  PAYSTACK_TIER2_MONTHLY_PLAN_CODE: string;
+  PAYSTACK_TIER3_MONTHLY_PLAN_CODE: string;
+  PAYSTACK_TIER4_MONTHLY_PLAN_CODE: string;
+  PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE: string;
 }
+
+
+const fetchConfig = async (): Promise<Config> => {
+  try {
+    const response = await fetch('/api/get-config.php');
+    if (!response.ok) throw new Error('Failed to fetch config');
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to load config:', error);
+    toast.error('Failed to load configuration');
+    throw error;
+  }
+};
 
 const Price = () => {
   const navigate = useNavigate();
@@ -35,46 +54,52 @@ const Price = () => {
   const [, setIsCheckingSubscription] = useState(false);
   const [currentUserTier, setCurrentUserTier] = useState<string | null>(null);
   const [config, setConfig] = useState<Config | null>(null);
+  const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'annual'>('monthly');
 
   const tiers = useMemo(
     () => [
       {
         name: "Tier 1",
-        price: "150",
-        priceInKobo: 15000,
-        licenses: 2,
+        price: "550",
+        priceInKobo: 55000,
+        monthlyPrice: "50",
+        licenses: TIER_LICENSE_LIMITS.basic,
         highlight: false,
-        features: ["2 licenses per category"],
+        features: [`${TIER_LICENSE_LIMITS.basic} licenses per category`],
       },
       {
         name: "Tier 2",
-        price: "250",
-        priceInKobo: 25000,
-        licenses: 8,
+        price: "900",
+        priceInKobo: 90000,
+        monthlyPrice: "80",
+        licenses: TIER_LICENSE_LIMITS.standard,
         highlight: false,
-        features: ["8 licenses per category"],
+        features: [`${TIER_LICENSE_LIMITS.standard} licenses per category`],
       },
       {
         name: "Tier 3",
-        price: "350",
-        priceInKobo: 35000,
-        licenses: 12,
+        price: "1000",
+        priceInKobo: 100000,
+        monthlyPrice: "100",
+        licenses: TIER_LICENSE_LIMITS.professional,
         highlight: false,
-        features: ["12 licenses per category"],
+        features: [`${TIER_LICENSE_LIMITS.professional} licenses per category`],
       },
       {
         name: "Tier 4",
-        price: "550",
-        priceInKobo: 55000,
-        licenses: 30,
+        price: "2100",
+        priceInKobo: 210000,
+        monthlyPrice: "200",
+        licenses: TIER_LICENSE_LIMITS.advanced,
         highlight: true,
-        features: ["30 licenses per category"],
+        features: [`${TIER_LICENSE_LIMITS.advanced} licenses per category`],
       },
       {
-        name: "Premium",
-        price: "1 000",
-        priceInKobo: 100000,
-        licenses: "∞",
+        name: "Tier 5",
+        price: "4000",
+        priceInKobo: 420000,
+        monthlyPrice: "350",
+        licenses: TIER_LICENSE_LIMITS.premium,
         highlight: false,
         features: ["Unlimited licenses per category"],
       },
@@ -120,17 +145,16 @@ const Price = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    const fetchConfig = async () => {
+    const loadConfig = async () => {
       try {
-        const response = await fetch('/api/get-config.php');
-        const data = await response.json();
-        setConfig(data);
+        const configData = await fetchConfig();
+        setConfig(configData);
       } catch (error) {
         console.error('Failed to load config:', error);
         toast.error('Failed to load configuration');
       }
     };
-    fetchConfig();
+    loadConfig();
   }, []);
 
   const handleSubscription = useCallback(
@@ -163,7 +187,7 @@ const Price = () => {
           "Tier 2": "standard",
           "Tier 3": "professional",
           "Tier 4": "advanced",
-          "Premium": "premium",
+          "Tier 5": "premium",
         };
 
         if (profile?.type_of_user === tierToTypeMap[tierName]) {
@@ -174,15 +198,25 @@ const Price = () => {
 
         const paystackKey = config.PAYSTACK_PUBLIC_KEY;
         const planCode =
-          tierName === "Tier 1"
-            ? config.PAYSTACK_TIER1_PLAN_CODE
+          subscriptionType === 'annual'
+            ? tierName === "Tier 1"
+              ? config.PAYSTACK_TIER1_PLAN_CODE
+              : tierName === "Tier 2"
+              ? config.PAYSTACK_TIER2_PLAN_CODE
+              : tierName === "Tier 3"
+              ? config.PAYSTACK_TIER3_PLAN_CODE
+              : tierName === "Tier 4"
+              ? config.PAYSTACK_TIER4_PLAN_CODE
+              : config.PAYSTACK_PREMIUM_PLAN_CODE
+            : tierName === "Tier 1"
+            ? config.PAYSTACK_TIER1_MONTHLY_PLAN_CODE
             : tierName === "Tier 2"
-            ? config.PAYSTACK_TIER2_PLAN_CODE
+            ? config.PAYSTACK_TIER2_MONTHLY_PLAN_CODE
             : tierName === "Tier 3"
-            ? config.PAYSTACK_TIER3_PLAN_CODE
+            ? config.PAYSTACK_TIER3_MONTHLY_PLAN_CODE
             : tierName === "Tier 4"
-            ? config.PAYSTACK_TIER4_PLAN_CODE
-            : config.PAYSTACK_PREMIUM_PLAN_CODE;
+            ? config.PAYSTACK_TIER4_MONTHLY_PLAN_CODE
+            : config.PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE;
 
         if (!paystackKey) {
           throw new Error("Paystack public key not found");
@@ -194,11 +228,20 @@ const Price = () => {
           return;
         }
 
+        const amount = subscriptionType === 'annual' 
+          ? selectedTier.priceInKobo 
+          : Math.round((selectedTier.priceInKobo / 12) * 100);
+
+        if (amount < 100) {
+          toast.error("Invalid subscription amount");
+          return;
+        }
+
         const paystack = new PaystackPop();
         const paystackOptions: ExtendedPaystackOptions = {
           key: paystackKey,
           email: user.email,
-          amount: selectedTier.priceInKobo,
+          amount: amount,
           currency: "ZAR",
           plan: planCode,
           channels: ["card"],
@@ -211,19 +254,25 @@ const Price = () => {
                 value: tierName,
               },
             ],
+            type: tierToTypeMap[tierName],
+            subscriptionType,
           },
           onSuccess: async (response: PaystackResponse) => {
             try {
               const startDate = new Date();
               const endDate = new Date(startDate);
-              endDate.setFullYear(endDate.getFullYear() + 1);
+              if (subscriptionType === 'monthly') {
+                endDate.setMonth(endDate.getMonth() + 1);
+              } else {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+              }
 
               const typeOfUserMap: { [key: string]: string } = {
                 "Tier 1": "basic",
                 "Tier 2": "standard",
                 "Tier 3": "professional",
                 "Tier 4": "advanced",
-                "Premium": "premium",
+                "Tier 5": "premium",
               };
 
               const updateData = {
@@ -240,23 +289,12 @@ const Price = () => {
                 .update(updateData)
                 .eq("id", user.id);
 
-              if (updateError) {
-                console.error("Detailed update error:", updateError);
-                throw updateError;
-              }
-
+              if (updateError) throw updateError;
               toast.success("Successfully subscribed!");
               navigate("/profile");
             } catch (error: any) {
               console.error("Error updating subscription:", error);
-              console.error("Error details:", {
-                message: error.message,
-                details: error.details,
-                hint: error.hint,
-              });
-              toast.error(
-                "Payment successful but failed to update subscription status. Please contact support."
-              );
+              toast.error("Payment successful but failed to update subscription status. Please contact support.");
             } finally {
               setIsProcessingPayment(false);
             }
@@ -276,7 +314,7 @@ const Price = () => {
         setIsCheckingSubscription(false);
       }
     },
-    [user?.email, user?.id, navigate, tiers, config]
+    [user?.email, user?.id, navigate, tiers, config, subscriptionType]
   );
 
   const renderActionButton = useMemo(
@@ -306,7 +344,7 @@ const Price = () => {
         "Tier 2": "standard",
         "Tier 3": "professional",
         "Tier 4": "advanced",
-        "Premium": "premium",
+        "Tier 5": "premium",
       };
 
       const tierLevelMap: { [key: string]: number } = {
@@ -387,6 +425,30 @@ const Price = () => {
             </button>
           </div>
 
+          {/* Subscription Type Buttons */}
+          <div className="flex justify-center mb-4 bg-gray-800 rounded-lg p-1">
+            <button
+              onClick={() => setSubscriptionType('annual')}
+              className={`px-4 py-2 rounded-lg flex-1 transition-colors ${
+                subscriptionType === 'annual' 
+                  ? 'bg-indigo-600 text-white shadow-md' 
+                  : 'bg-transparent text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              Annual
+            </button>
+            <button
+              onClick={() => setSubscriptionType('monthly')}
+              className={`px-4 py-2 rounded-lg flex-1 transition-colors ${
+                subscriptionType === 'monthly' 
+                  ? 'bg-indigo-600 text-white shadow-md' 
+                  : 'bg-transparent text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              Monthly
+            </button>
+          </div>
+
           {/* Pricing Cards Grid */}
           <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
             {tiers.map((tier) => (
@@ -401,11 +463,6 @@ const Price = () => {
                 }
                 flex flex-col justify-between`}
               >
-                {/* Price Badge */}
-                <div className="absolute -right-12 top-8 rotate-45 bg-indigo-500/20 px-12 py-1 text-xs text-white/80">
-                  Annual
-                </div>
-
                 <div className="relative z-10 flex-grow flex flex-col">
                   {/* Tier Name */}
                   <h3 className={`text-xl font-bold mb-2 ${
@@ -415,9 +472,20 @@ const Price = () => {
                   </h3>
 
                   {/* Price Section */}
-                  <div className="flex items-baseline mb-6">
-                    <span className="text-4xl font-extrabold text-white">R{tier.price}</span>
-                    <span className="text-white/50 ml-2 text-sm">/year</span>
+                  <div className="flex flex-col mb-6">
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-extrabold text-white">
+                        R{subscriptionType === 'annual' ? tier.price : tier.monthlyPrice}
+                      </span>
+                      <span className="text-white/50 ml-2 text-sm">
+                        /{subscriptionType === 'annual' ? 'year' : 'month'}
+                      </span>
+                    </div>
+                    {subscriptionType === 'annual' && (
+                      <div className="text-green-400 text-sm mt-1">
+                        Save R{(Number(tier.monthlyPrice) * 12 - Number(tier.price)).toFixed(0)} with annual plan
+                      </div>
+                    )}
                   </div>
 
                   {/* Features List */}

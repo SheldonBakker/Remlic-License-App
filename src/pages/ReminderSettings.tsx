@@ -228,7 +228,7 @@ const ReminderSettings = () => {
       return;
     }
     
-    if (!["daily", "weekly"].includes(frequency)) {
+    if (!["daily", "weekly", "monthly"].includes(frequency)) {
       toast.error("Invalid reminder frequency");
       return;
     }
@@ -458,6 +458,12 @@ const ReminderSettings = () => {
                                     className="text-black bg-white"
                                   >
                                     Weekly
+                                  </option>
+                                  <option
+                                    value="monthly"
+                                    className="text-black bg-white"
+                                  >
+                                    Monthly
                                   </option>
                                 </select>
                               </div>

@@ -194,6 +194,13 @@ const Dash: React.FC = () => {
   // Add this near the top of the component
   const abortController = useRef<AbortController | null>(null);
 
+  const checkSubscriptionValidity = useCallback((subscriptionEndDate: string | null): boolean => {
+    if (!subscriptionEndDate) return false;
+    const now = new Date();
+    const endDate = new Date(subscriptionEndDate);
+    return endDate > now;
+  }, []);
+
   // Single database query on page load
   useEffect(() => {
     const initializeDashboard = async () => {
@@ -205,6 +212,19 @@ const Dash: React.FC = () => {
           navigate('/login');
           return;
         }
+
+        const { data: profileData } = await supabaseInstance
+          .from('profiles')
+          .select('type_of_user, subscription_status, subscription_end_date')
+          .eq('id', session.user.id)
+          .single();
+
+        const isSubscriptionValid = checkSubscriptionValidity(profileData?.subscription_end_date);
+        
+        dispatch({ 
+          type: 'SET_SUBSCRIPTION', 
+          payload: profileData?.subscription_status === 'active' && isSubscriptionValid
+        });
 
         // Fetch user profile and all licenses
         const [profileResult, ...results] = await Promise.all([
@@ -223,7 +243,6 @@ const Dash: React.FC = () => {
 
         // Update state with all results
         dispatch({ type: 'SET_USER_TIER', payload: profileResult.data?.type_of_user || null });
-        dispatch({ type: 'SET_SUBSCRIPTION', payload: profileResult.data?.subscription_status === 'active' });
         dispatch({
           type: 'SET_LICENSES',
           payload: {
@@ -247,7 +266,7 @@ const Dash: React.FC = () => {
     };
 
     initializeDashboard();
-  }, [navigate]);
+  }, [navigate, checkSubscriptionValidity]);
 
   // Handlers
   const handleAddLicense = useCallback(() => {

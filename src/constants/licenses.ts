@@ -71,8 +71,9 @@ export const LICENSE_TYPES: Array<{
 
 export const TIER_LICENSE_LIMITS: Record<string, number> = {
   basic: 2,
-  standard: 8,
-  professional: 12,
-  advanced: 30,
+  standard: 5,
+  professional: 8,
+  advanced: 10,
   premium: Number.MAX_SAFE_INTEGER,
+
 }; 

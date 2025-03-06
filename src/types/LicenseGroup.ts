@@ -18,6 +18,7 @@ export interface LicenseGroup {
   passports: Contract[];
   tvlicenses: Contract[];
   others: Contract[];
+
 }
 
 export type LicenseType =
