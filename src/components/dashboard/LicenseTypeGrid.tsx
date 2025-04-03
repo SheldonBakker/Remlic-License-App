@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { LicenseGroup } from '../../types/LicenseGroup';
-import { LICENSE_TYPES, TIER_LICENSE_LIMITS } from '../../constants/licenses';
+import { LICENSE_TYPES_ARRAY, TIER_LICENSE_LIMITS, LICENSE_TYPES } from '../../constants/licenses';
 
 interface LicenseTypeGridProps {
   licenses: LicenseGroup;
@@ -20,20 +20,26 @@ const getLicenseCardClassName = (isSelected: boolean, isLimitReached: boolean) =
   ${isLimitReached ? 'opacity-75' : ''}
 `;
 
-const LicenseCard = React.memo(({ 
+interface LicenseCardComponentProps {
+  licenseType: typeof LICENSE_TYPES_ARRAY[0];
+  items: LicenseGroup[keyof LicenseGroup];
+  limit: number;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+const LicenseCard = React.memo<LicenseCardComponentProps>(({ 
   licenseType, 
   items, 
   limit, 
   isSelected, 
   onSelect 
-}: {
-  licenseType: typeof LICENSE_TYPES[0];
-  items: LicenseGroup[keyof LicenseGroup];
-  limit: number;
-  isSelected: boolean;
-  onSelect: () => void;
 }) => {
-  const isLimitReached = items.length >= limit;
+  const isLimitReached = limit !== Infinity && items.length >= limit;
+  
+  const typeConfig = LICENSE_TYPES[licenseType.id];
+  const iconColorClass = typeConfig?.tailwindClass?.text || 'text-indigo-400';
+  const hoverColorClass = typeConfig?.tailwindClass?.hover || 'group-hover:text-indigo-300';
   
   return (
     <div
@@ -43,8 +49,8 @@ const LicenseCard = React.memo(({
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
           <span className={`
-            text-indigo-400 transition-colors duration-300
-            group-hover:text-indigo-300
+            ${iconColorClass} transition-colors duration-300
+            ${hoverColorClass}
           `}>
             {React.createElement(licenseType.icon, { 
               className: 'w-4 h-4 transform group-hover:scale-110 transition-transform duration-300' 
@@ -55,7 +61,7 @@ const LicenseCard = React.memo(({
           </span>
         </div>
         <span className="text-indigo-400 text-xs font-semibold px-1.5 py-0.5 rounded-full bg-indigo-500/10">
-          {items.length}/{limit === Number.MAX_SAFE_INTEGER ? '∞' : limit}
+          {items.length}/{limit === Infinity ? '∞' : limit}
         </span>
       </div>
 
@@ -64,7 +70,7 @@ const LicenseCard = React.memo(({
           className="bg-gradient-to-r from-indigo-500 to-indigo-400 h-full rounded-full 
                     transition-all duration-300 group-hover:from-indigo-400 group-hover:to-indigo-300"
           style={{
-            width: `${(items.length / (limit === Number.MAX_SAFE_INTEGER ? items.length || 1 : limit)) * 100}%`
+            width: `${(items.length / (limit === Infinity ? items.length || 1 : limit)) * 100}%`
           }}
         />
       </div>
@@ -86,18 +92,27 @@ export const LicenseTypeGrid = React.memo<LicenseTypeGridProps>(({
   userTier,
 }) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
-      {LICENSE_TYPES.map((licenseType) => {
-        const type = licenseType.id;
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mt-2 sm:mt-4">
+      {LICENSE_TYPES_ARRAY.map((licenseType) => {
+        const type = licenseType.id as keyof LicenseGroup;
         const items = licenses[type] || [];
-        const limit = TIER_LICENSE_LIMITS[userTier || 'basic'];
+        
+        const tierKey = userTier === 'premium' ? 'premium' : 'free';
+        const tierLimits = TIER_LICENSE_LIMITS[tierKey] || {};
+        
+        let effectiveLimit = Infinity;
+        
+        if (tierLimits && typeof tierLimits === 'object' && type in tierLimits) {
+            const limitForType = tierLimits[type as keyof typeof tierLimits];
+            effectiveLimit = typeof limitForType === 'number' ? limitForType : Infinity;
+        }
 
         return (
           <LicenseCard
             key={type}
             licenseType={licenseType}
             items={items}
-            limit={limit}
+            limit={effectiveLimit}
             isSelected={selectedSection === type}
             onSelect={() => onSectionSelect(type)}
           />

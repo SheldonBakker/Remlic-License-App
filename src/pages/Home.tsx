@@ -225,6 +225,128 @@ const Home = () => {
             ))}
           </div>
 
+          {/* Updated pricing section for the Home page */}
+          <div className="bg-white/5 rounded-2xl p-8 mb-16 border border-indigo-500/20">
+            <h2 className="text-3xl font-bold text-white mb-6 text-center">
+              Flexible Pricing Plans
+            </h2>
+            <p className="text-white/70 text-center max-w-3xl mx-auto mb-8">
+              Choose from our range of subscription plans, from basic to premium, all with affordable pricing and great value.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              <div className="bg-gradient-to-b from-white/10 to-transparent rounded-xl p-6 border border-white/10 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">Basic</h3>
+                  <div className="flex items-baseline mb-4">
+                    <span className="text-3xl font-bold text-white">R550</span>
+                    <span className="text-white/50 ml-2">/year</span>
+                  </div>
+                  <span className="text-sm bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full">
+                    or R50/month
+                  </span>
+                  <ul className="mt-6 space-y-3">
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span className="text-white/70">2 licenses per category</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span className="text-white/70">Email reminders</span>
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => navigate("/price")}
+                  className="mt-6 w-full px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 
+                    transition-all duration-200 font-medium"
+                >
+                  Select Plan
+                </button>
+              </div>
+              
+              <div className="bg-gradient-to-b from-white/10 to-transparent rounded-xl p-6 border border-white/10 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">Advanced</h3>
+                  <div className="flex items-baseline mb-4">
+                    <span className="text-3xl font-bold text-white">R2100</span>
+                    <span className="text-white/50 ml-2">/year</span>
+                  </div>
+                  <span className="text-sm bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full">
+                    or R200/month
+                  </span>
+                  <ul className="mt-6 space-y-3">
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span className="text-white/70">10 licenses per category</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span className="text-white/70">Priority support</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span className="text-white/70">Advanced features</span>
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => navigate("/price")}
+                  className="mt-6 w-full px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 
+                    transition-all duration-200 font-medium"
+                >
+                  Select Plan
+                </button>
+              </div>
+              
+              <div className="bg-gradient-to-b from-amber-500/20 to-amber-500/5 rounded-xl p-6 border border-amber-500/30 flex flex-col justify-between transform scale-105 z-10">
+                <div>
+                  <div className="absolute top-0 right-0 bg-amber-400 text-black px-3 py-1 rounded-bl-lg rounded-tr-lg text-xs font-bold">
+                    POPULAR
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Premium</h3>
+                  <div className="flex items-baseline mb-4">
+                    <span className="text-3xl font-bold text-white">R4000</span>
+                    <span className="text-white/50 ml-2">/year</span>
+                  </div>
+                  <span className="text-sm bg-amber-500/30 text-amber-300 px-3 py-1 rounded-full">
+                    or R350/month
+                  </span>
+                  <ul className="mt-6 space-y-3">
+                    <li className="flex items-start">
+                      <span className="text-amber-400 mr-2">•</span>
+                      <span className="text-white/70">Unlimited licenses</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-amber-400 mr-2">•</span>
+                      <span className="text-white/70">Priority support</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-amber-400 mr-2">•</span>
+                      <span className="text-white/70">API access</span>
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => navigate("/price")}
+                  className="mt-6 w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black rounded-xl hover:from-amber-600 hover:to-yellow-600
+                    transition-all duration-200 font-medium"
+                >
+                  Select Plan
+                </button>
+              </div>
+            </div>
+            
+            <div className="text-center mt-8">
+              <button
+                onClick={() => navigate("/price")}
+                className="px-8 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 
+                  transition-all duration-200 font-medium"
+              >
+                View All Plans
+              </button>
+            </div>
+          </div>
 
           {/* Why Choose Us Section - Updated with Documentation content */}
           <div className="max-w-4xl mx-auto mt-16 mb-16">

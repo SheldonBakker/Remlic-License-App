@@ -3,8 +3,7 @@ import { FiBellOff, FiBell } from 'react-icons/fi';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { PauseConfirmationModal } from './PauseConfirmationModal';
-
-type LicenseType = 'drivers' | 'vehicles' | 'firearms' | 'prpds' | 'works' | 'passports' | 'tvlicenses' | 'other_documents' | 'others';
+import { LicenseType } from '../../types/LicenseGroup';
 
 interface PauseProps {
   isPaused: boolean;
@@ -50,18 +49,21 @@ export const Pause: React.FC<PauseProps> = ({
         drivers: 'drivers',
         vehicles: 'vehicles',
         firearms: 'firearms',
-        prpds: 'prpd',
+        prpd: 'prpd',
         works: 'works',
         passports: 'passports',
         tvlicenses: 'tv_licenses',
-        other_documents: 'other_documents',
-        others: 'other_documents'
+        others: 'other_documents',
+        psira: 'psira_records'
       };
       
       const tableName = tableMapping[licenseType];
       
       if (!tableName) {
-        throw new Error(`Invalid license type: ${licenseType}`);
+        toast.error(`Cannot update pause status: Unknown type ${licenseType}`);
+        console.error(`Invalid license type for pause update: ${licenseType}`);
+        setIsUpdating(false);
+        return;
       }
 
       const { error } = await client

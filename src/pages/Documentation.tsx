@@ -22,9 +22,21 @@ import { LICENSE_TYPES } from '../constants/licenses';
 import { Link } from 'react-router-dom';
 
 const Documentation = () => {
-  const licenseTypes = LICENSE_TYPES.map(type => ({
-    ...type,
-    icon: React.createElement(type.icon, { className: 'h-6 w-6' })
+  const licenseTypes = Object.entries(LICENSE_TYPES).map(([id, type]) => ({
+    id,
+    title: type.name,
+    description: id === 'psira' 
+      ? "Verify and store PSIRA registration details" 
+      : `Track and manage your ${type.name.toLowerCase()} renewals`,
+    icon: React.createElement(type.icon, { className: 'h-6 w-6' }),
+    color: type.color,
+    tailwindClass: type.tailwindClass,
+    fields: [
+      ...(id === 'vehicles' ? ["Make", "Model", "Registration Number", "Expiry Date"] :
+         id === 'drivers' ? ["First Name", "Last Name", "ID Number", "Expiry Date"] :
+         id === 'psira' ? ["First Name", "Last Name", "PSIRA No", "Reg Status", "Expiry Date"] :
+         ["Owner", "Description", "Number", "Expiry Date"])
+    ],
   }));
 
   const notificationFeatures = [
@@ -55,32 +67,32 @@ const Documentation = () => {
     {
       id: "basic",
       title: "Tier 1",
-      price: "R150/year",
-      features: ["2 Licenses"],
+      price: "R550/year or R50/month",
+      features: ["2 Licenses per category"],
     },
     {
       id: "standard",
       title: "Tier 2",
-      price: "R250/year",
-      features: ["8 Licenses"],
+      price: "R900/year or R80/month",
+      features: ["5 Licenses per category"],
     },
     {
       id: "professional",
       title: "Tier 3",
-      price: "R350/year",
-      features: ["12 Licenses"],
+      price: "R1000/year or R100/month",
+      features: ["8 Licenses per category"],
     },
     {
       id: "advanced",
       title: "Tier 4",
-      price: "R550/year",
-      features: ["30 Licenses", "Priority support"],
+      price: "R2100/year or R200/month",
+      features: ["10 Licenses per category", "Priority support"],
     },
     {
       id: "premium",
-      title: "Premium",
-      price: "R1,000/year",
-      features: ["Unlimited licenses", "API access"],
+      title: "Tier 5",
+      price: "R4000/year or R350/month",
+      features: ["Unlimited licenses per category", "Priority support", "API access"],
     },
   ];
 
@@ -303,11 +315,11 @@ const Documentation = () => {
                     </p>
                     {step === 2 && (
                       <ul className="list-disc list-inside ml-4 space-y-2 text-white">
-                        <li>Tier 1 (R150/year): Basic plan with 2 licenses per category</li>
-                        <li>Tier 2 (R250/year): Standard plan with 8 licenses per category</li>
-                        <li>Tier 3 (R350/year): Professional plan with 12 licenses per category</li>
-                        <li>Tier 4 (R550/year): Advanced plan with 30 licenses per category</li>
-                        <li>Premium (R1,000/year): Enterprise plan with unlimited licenses</li>
+                        <li>Tier 1 (R550/year or R50/month): Basic plan with 2 licenses per category</li>
+                        <li>Tier 2 (R900/year or R80/month): Standard plan with 5 licenses per category</li>
+                        <li>Tier 3 (R1000/year or R100/month): Professional plan with 8 licenses per category</li>
+                        <li>Tier 4 (R2100/year or R200/month): Advanced plan with 10 licenses per category</li>
+                        <li>Tier 5 (R4000/year or R350/month): Premium plan with unlimited licenses per category</li>
                       </ul>
                     )}
                   </div>
@@ -320,43 +332,112 @@ const Documentation = () => {
           <section id="subscription-plans" className="bg-[#1f2937]/30 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-indigo-500/20">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-white mb-3">Subscription Plans</h2>
-              <p className="text-white/70">Choose the perfect plan for your needs</p>
+              <p className="text-white/70 max-w-2xl mx-auto">Choose the perfect plan for your license management needs, with flexible pricing options for businesses of all sizes</p>
             </div>
+            
+            {/* Billing Toggle */}
+            <div className="flex justify-center mb-8">
+              <div className="inline-flex rounded-lg bg-slate-800/80 p-1 backdrop-blur-sm">
+                <div className="flex items-center space-x-3">
+                  <span className="rounded-md bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm">
+                    Annual
+                  </span>
+                  <span className="px-4 py-2 text-sm font-medium text-white/70">
+                    Monthly
+                  </span>
+                </div>
+              </div>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {subscriptionTiers.map((tier) => (
-                <Link 
+                <div 
                   key={tier.id} 
-                  to="/prices"
-                  className="group relative bg-white/5 rounded-xl p-6 border border-indigo-500/20
-                    hover:bg-white/10 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10
-                    transition-all duration-300 ease-out"
+                  className={`relative overflow-hidden rounded-xl transform transition-all duration-300 hover:scale-105 hover:shadow-xl ${
+                    tier.id === 'premium' 
+                      ? 'bg-gradient-to-b from-amber-500/20 to-amber-500/5 border-2 border-amber-500/30' 
+                      : 'bg-gradient-to-b from-white/10 to-transparent border border-indigo-500/20'
+                  }`}
                 >
-                  {tier.id === 'advanced' && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        Most Popular
-                      </span>
+                  {tier.id === 'premium' && (
+                    <div className="absolute top-0 right-0 bg-amber-400 text-black px-3 py-1 rounded-bl-lg font-bold text-xs">
+                      POPULAR
                     </div>
                   )}
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">
-                      {tier.title}
-                    </h3>
-                    <p className="text-3xl font-extrabold text-white mb-2">
-                      {tier.price}
-                    </p>
-                    <div className="h-px w-16 bg-indigo-500/30 mx-auto"></div>
+                  
+                  <div className="p-6">
+                    {/* Tier Header */}
+                    <div className="text-center mb-5">
+                      <h3 className={`text-xl font-bold mb-2 ${
+                        tier.id === 'premium' ? 'text-amber-300' : 'text-white'
+                      }`}>
+                        {tier.title}
+                      </h3>
+                      
+                      {/* Price Display */}
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-baseline">
+                          <span className="text-3xl font-extrabold text-white">
+                            {tier.price.split('/')[0]}
+                          </span>
+                          <span className="text-white/50 ml-1 text-sm">
+                            /year
+                          </span>
+                        </div>
+                        <div className={`text-xs mt-1 ${
+                          tier.id === 'premium' ? 'text-amber-300/80' : 'text-indigo-400/80'
+                        }`}>
+                          or {tier.price.split('or ')[1]}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Divider */}
+                    <div className={`h-px w-16 mx-auto mb-5 ${
+                      tier.id === 'premium' ? 'bg-amber-500/30' : 'bg-indigo-500/30'
+                    }`}></div>
+                    
+                    {/* Features List */}
+                    <ul className="space-y-3 mb-5">
+                      {tier.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start">
+                          <FiCheck className={`h-5 w-5 mr-2 flex-shrink-0 ${
+                            tier.id === 'premium' ? 'text-amber-400' : 'text-green-400'
+                          }`} />
+                          <span className="text-white/80 text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    {/* CTA Button */}
+                    <Link 
+                      to="/price"
+                      className={`w-full block text-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        tier.id === 'premium'
+                          ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600' 
+                          : 'bg-indigo-500/80 text-white hover:bg-indigo-600'
+                      }`}
+                    >
+                      Select Plan
+                    </Link>
                   </div>
-                  <ul className="space-y-3">
-                    {tier.features.map((feature, index) => (
-                      <li key={index} className="flex items-start text-white/80 group-hover:text-white transition-colors">
-                        <FiCheck className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </Link>
+                  
+                  {/* Background Decorative Elements */}
+                  <div className={`absolute -bottom-10 -right-10 w-24 h-24 rounded-full blur-2xl opacity-30 ${
+                    tier.id === 'premium' ? 'bg-amber-400' : 'bg-indigo-500'
+                  }`}></div>
+                </div>
               ))}
+            </div>
+            
+            {/* Pricing Notes */}
+            <div className="text-center mt-8">
+              <p className="text-white/60 text-sm">
+                All plans include email notifications and unlimited license renewals. 
+                <Link to="/price" className="text-indigo-400 hover:text-indigo-300 ml-1 underline-offset-2 hover:underline">
+                  View full pricing details
+                </Link>
+              </p>
             </div>
           </section>
 
@@ -395,7 +476,7 @@ const Documentation = () => {
                   className="bg-white/5 rounded-xl p-6 border border-indigo-500/20"
                 >
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="h-10 w-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-indigo-400">
+                    <div className={`h-10 w-10 ${license.tailwindClass.bg} rounded-lg flex items-center justify-center ${license.tailwindClass.text}`}>
                       {React.cloneElement(license.icon, {
                         "aria-label": `${license.title} icon`,
                         role: "img",
@@ -608,8 +689,7 @@ const Documentation = () => {
 
       <button
         onClick={scrollToTop}
-        className={`
-          fixed bottom-8 right-8 p-3 rounded-full
+        className={`          fixed bottom-8 right-8 p-3 rounded-full
           bg-indigo-600 text-white shadow-lg
           hover:bg-indigo-700 transition-all duration-300
           focus:outline-none focus:ring-2 focus:ring-indigo-500/40
@@ -625,3 +705,4 @@ const Documentation = () => {
 };
 
 export default React.memo(Documentation);
+

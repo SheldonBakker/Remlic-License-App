@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres.ywlyafdtnbozflknjsip:Pr9Y1rmP7BVdKsgO@aws-0-eu-central-1.pooler.supabase.com:6543/postgres"
+      ]
+    }
+  }
+}

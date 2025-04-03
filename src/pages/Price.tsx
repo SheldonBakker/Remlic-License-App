@@ -32,16 +32,42 @@ interface Config {
   PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE: string;
 }
 
-
 const fetchConfig = async (): Promise<Config> => {
-  try {
-    const response = await fetch('/api/get-config.php');
-    if (!response.ok) throw new Error('Failed to fetch config');
-    return await response.json();
-  } catch (error) {
-    console.error('Failed to load config:', error);
-    toast.error('Failed to load configuration');
-    throw error;
+  // Check if running in development mode (Vite uses import.meta.env)
+  const isDevelopment = import.meta.env.DEV;
+
+  if (isDevelopment) {
+    try {
+      // In development mode, use environment variables
+      return {
+        PAYSTACK_PUBLIC_KEY: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '',
+        PAYSTACK_TIER1_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER1_PLAN_CODE || '',
+        PAYSTACK_TIER2_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER2_PLAN_CODE || '',
+        PAYSTACK_TIER3_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER3_PLAN_CODE || '',
+        PAYSTACK_TIER4_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER4_PLAN_CODE || '',
+        PAYSTACK_PREMIUM_PLAN_CODE: import.meta.env.VITE_PAYSTACK_PREMIUM_PLAN_CODE || '',
+        PAYSTACK_TIER1_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER1_MONTHLY_PLAN_CODE || '',
+        PAYSTACK_TIER2_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER2_MONTHLY_PLAN_CODE || '',
+        PAYSTACK_TIER3_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER3_MONTHLY_PLAN_CODE || '',
+        PAYSTACK_TIER4_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER4_MONTHLY_PLAN_CODE || '',
+        PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE || '',
+      };
+    } catch (error) {
+      console.error('Failed to load environment variables:', error);
+      toast.error('Failed to load configuration from environment variables');
+      throw new Error('Could not load configuration from environment variables');
+    }
+  } else {
+    // In production, use the API endpoint
+    try {
+      const response = await fetch('/api/get-config.php');
+      if (!response.ok) throw new Error('Failed to fetch config from API');
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to load config from API:', error);
+      toast.error('Failed to load configuration from server');
+      throw error;
+    }
   }
 };
 
@@ -54,7 +80,7 @@ const Price = () => {
   const [, setIsCheckingSubscription] = useState(false);
   const [currentUserTier, setCurrentUserTier] = useState<string | null>(null);
   const [config, setConfig] = useState<Config | null>(null);
-  const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'annual'>('monthly');
+  const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'annual'>('annual');
 
   const tiers = useMemo(
     () => [
