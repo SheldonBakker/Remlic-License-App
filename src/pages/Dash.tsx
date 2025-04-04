@@ -135,7 +135,7 @@ const Dash: React.FC = () => {
   // Initialize state including psira
   const initialLicenseState = useMemo<LicenseGroup>(() => ({
     vehicles: [], drivers: [], firearms: [], prpds: [], works: [], 
-    others: [], passports: [], tvlicenses: [], psira: []
+    others: [], passports: [], tvlicenses: [], psira: [], competency: []
   }), []);
   const [state, dispatch] = useReducer(dashReducer, {
     licenses: initialLicenseState,

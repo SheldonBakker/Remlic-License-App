@@ -47,7 +47,8 @@ export const RenewLicenseModal: React.FC<RenewLicenseModalProps> = ({
         works: 'works',
         others: 'other_documents',
         passports: 'passports',
-        tvlicenses: 'tv_licenses'
+        tvlicenses: 'tv_licenses',
+        competency: 'competency'
       };
 
       const { error } = await client

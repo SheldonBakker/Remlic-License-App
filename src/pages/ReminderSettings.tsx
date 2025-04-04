@@ -31,7 +31,9 @@ const ReminderSettings = () => {
     works: [],
     others: [],
     passports: [],
-    tv_licenses: []
+    tvlicenses: [],
+    psira: [],
+    competency: []
   });
   const [error, setError] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
@@ -53,7 +55,9 @@ const ReminderSettings = () => {
     works: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
     others: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
     passports: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    tv_licenses: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" }
+    tvlicenses: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
+    psira: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
+    competency: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" }
   }), []);
 
   const [typeSettings, setTypeSettings] = useState(initialTypeSettings);
@@ -66,7 +70,9 @@ const ReminderSettings = () => {
     works: false,
     others: false,
     passports: false,
-    tv_licenses: false
+    tvlicenses: false,
+    psira: false,
+    competency: false
   });
 
   const [isUpdating, setIsUpdating] = useState<Record<LicenseType, boolean>>({
@@ -77,7 +83,9 @@ const ReminderSettings = () => {
     works: false,
     others: false,
     passports: false,
-    tv_licenses: false
+    tvlicenses: false,
+    psira: false,
+    competency: false
   });
 
   const userReceived = useRef(false);
@@ -89,15 +97,24 @@ const ReminderSettings = () => {
     const client = await supabase;
     const licenseTypes = [
       'vehicles', 'drivers', 'firearms', 'prpd', 
-      'works', 'others', 'passports', 'tv_licenses'
+      'works', 'others', 'passports', 'tvlicenses', 'psira', 'competency'
     ];
     
     const results = await Promise.all(
-      licenseTypes.map(type => 
-        client.from(type === 'others' ? 'other_documents' : type)
+      licenseTypes.map(type => {
+        let tableName = type;
+        if (type === 'others') {
+          tableName = 'other_documents';
+        } else if (type === 'tvlicenses') {
+          tableName = 'tv_licenses';
+        } else if (type === 'psira') {
+          tableName = 'psira_records';
+        }
+        
+        return client.from(tableName)
           .select("*")
-          .eq("user_id", user.id)
-      )
+          .eq("user_id", user.id);
+      })
     );
 
     return results.reduce((acc, { data }, index) => ({

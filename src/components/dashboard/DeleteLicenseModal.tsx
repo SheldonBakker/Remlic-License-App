@@ -35,7 +35,9 @@ export const DeleteLicenseModal: React.FC<DeleteLicenseModalProps> = ({
         works: 'works',
         others: 'other_documents',
         passports: 'passports', 
-        tvlicenses: 'tv_licenses'
+        tvlicenses: 'tv_licenses',
+        psira: 'psira_records',
+        competency: 'competency'
       };
 
       const { error } = await client

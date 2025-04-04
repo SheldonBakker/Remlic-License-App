@@ -2,7 +2,8 @@ import { supabase } from './supabase';
 import { toast } from 'react-hot-toast';
 import { Contract } from '../types/LicenseGroup'; // Assuming Contract type includes all needed PSIRA fields
 
-const PSIRA_API_URL = 'https://psiraapi.sortelearn.com/api/SecurityOfficer/Get_ApplicantDetails';
+// const PSIRA_API_URL = 'https://psiraapi.sortelearn.com/api/SecurityOfficer/Get_ApplicantDetails'; // Original URL
+const PSIRA_PROXY_URL = '/psira_proxy.php'; // URL for the local PHP proxy script
 
 // Interface for the raw API response structure
 interface PsiraApiResponse {
@@ -39,42 +40,42 @@ export const fetchPsiraDetails = async (idNumber: string): Promise<RawPsiraRecor
     return null;
   }
 
-  const payload = {
-    ApplicationNo: "",
-    ContactNo: null,
-    IDNumber: idNumber,
-    SIRANo: "",
-    CompanyName: "",
-    ProfileId: "4" // Keep this as "4" based on previous findings
-  };
+  // No longer need the full payload here, just the ID number for the proxy
+  // const payload = { ... };
 
   try {
-    const response = await fetch(PSIRA_API_URL, {
+    // Call the local proxy script instead of the direct API
+    const response = await fetch(PSIRA_PROXY_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json, text/plain, */*',
-        // Mimic headers observed in browser dev tools
-        'Origin': 'https://digitalservices.psira.co.za',
-        'Referer': 'https://digitalservices.psira.co.za/',
-        'skip': 'true'
-        // Add 'Authorization' or 'requestverificationtoken' if they prove necessary
+        'Content-Type': 'application/json', // Sending JSON to the proxy
+        'Accept': 'application/json', // Expecting JSON back from the proxy
       },
-      body: JSON.stringify(payload)
+      // Send only the idNumber in the body
+      body: JSON.stringify({ idNumber: idNumber })
     });
 
     if (!response.ok) {
       // Handle specific errors if possible, otherwise generic
+      // The proxy script should ideally return appropriate status codes and error messages
       const errorText = await response.text();
-      console.error('PSIRA API Error:', response.status, errorText);
-      toast.error(`API Error: ${response.status} - ${response.statusText}`);
+      console.error('PSIRA Proxy Error:', response.status, errorText);
+      // Try to parse error message if proxy sends JSON error
+      try {
+        const errorJson = JSON.parse(errorText);
+        toast.error(`Proxy Error: ${errorJson.message || response.statusText}`);
+      } catch {
+        toast.error(`Proxy Error: ${response.status} - ${response.statusText}`);
+      }
       return null;
     }
 
+    // Expecting the proxy to return the same PsiraApiResponse structure
     const data: PsiraApiResponse = await response.json();
 
     if (!data || !data.Table || data.Table.length === 0) {
-      toast.error('Applicant not found.');
+      // This could mean the proxy succeeded but the PSIRA API returned no data
+      toast.error('Applicant not found (via proxy).');
       return null;
     }
 
@@ -82,9 +83,66 @@ export const fetchPsiraDetails = async (idNumber: string): Promise<RawPsiraRecor
     return data.Table[0];
 
   } catch (error) {
-    console.error('Error fetching PSIRA details:', error);
+    // This catches network errors connecting to the proxy or JSON parsing errors
+    console.error('Error fetching PSIRA details via proxy:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
-    toast.error(`Network or Parsing Error: ${message}`);
+    toast.error(`Proxy Network/Parsing Error: ${message}`);
+    return null;
+  }
+};
+
+/**
+ * Fetches PSIRA applicant details from the external API using a PSIRA number.
+ * @param psiraNumber - The PSIRA number to search for.
+ * @returns The applicant data object or null if not found/error.
+ */
+export const fetchPsiraDetailsByPsiraNumber = async (psiraNumber: string): Promise<RawPsiraRecord | null> => {
+  if (!psiraNumber || psiraNumber.trim() === '') {
+    toast.error('Invalid PSIRA Number.');
+    return null;
+  }
+
+  try {
+    // Call the API using the proxy, but with a PSIRA number instead of ID number
+    const response = await fetch(PSIRA_PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      // Send the PSIRA number in the payload
+      body: JSON.stringify({ 
+        psiraNumber: psiraNumber,
+        usesPsiraNumber: true // Flag for the proxy to identify this is a PSIRA number search
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('PSIRA Proxy Error:', response.status, errorText);
+      try {
+        const errorJson = JSON.parse(errorText);
+        toast.error(`Proxy Error: ${errorJson.message || response.statusText}`);
+      } catch {
+        toast.error(`Proxy Error: ${response.status} - ${response.statusText}`);
+      }
+      return null;
+    }
+
+    const data: PsiraApiResponse = await response.json();
+
+    if (!data || !data.Table || data.Table.length === 0) {
+      toast.error('PSIRA Record not found.');
+      return null;
+    }
+
+    // Return the first record found
+    return data.Table[0];
+
+  } catch (error) {
+    console.error('Error fetching PSIRA details by PSIRA number:', error);
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    toast.error(`Proxy Network/Parsing Error: ${message}`);
     return null;
   }
 };
@@ -149,6 +207,87 @@ export const savePsiraRecord = async (recordData: RawPsiraRecord, userId: string
     console.error('Supabase operation failed:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     toast.error(`Save Error: ${message}`);
+    return null;
+  }
+};
+
+/**
+ * Updates an existing PSIRA record with fresh data from the PSIRA API.
+ * @param existingRecord - The existing PSIRA record to update.
+ * @returns The updated database record or null if error.
+ */
+export const updatePsiraRecordByPsiraNumber = async (existingRecord: Contract): Promise<Contract | null> => {
+  if (!existingRecord || !existingRecord.id) {
+    toast.error('Invalid record to update.');
+    return null;
+  }
+
+  const psiraNumber = existingRecord.psira_number;
+  if (!psiraNumber) {
+    toast.error('No PSIRA number found in the record.');
+    return null;
+  }
+
+  // Show processing notification
+  const toastId = toast.loading('Fetching latest PSIRA data...');
+
+  try {
+    // Fetch latest data from PSIRA API
+    const latestData = await fetchPsiraDetailsByPsiraNumber(psiraNumber);
+    
+    if (!latestData) {
+      toast.error('Failed to fetch latest PSIRA data.', { id: toastId });
+      return null;
+    }
+
+    const supabaseInstance = await supabase;
+
+    // Map the latest API data to database columns
+    const recordToUpdate = {
+      // Preserve existing record ID and user_id
+      // id: existingRecord.id, // Don't include this as it's the primary key
+      // user_id: existingRecord.user_id, // Keep the existing user_id
+      
+      // Update with latest data from PSIRA API
+      first_name: latestData.FirstName,
+      last_name: latestData.LastName,
+      psira_number: latestData.SIRANo,
+      gender: latestData.Gender,
+      registration_date: latestData.RegistrationDate,
+      profile_image: latestData.ProfileImage,
+      reg_status: latestData.RequestStatus,
+      emp_status: latestData.EmpStatus,
+      employer: latestData.EmpCompany,
+      certificate_status: latestData.CertificateStatus,
+      certificate_expiry_date: latestData.ExpiryDate,
+      grade: latestData.Grade,
+      special_courses: latestData.SpecialGrade
+      
+      // Remove the updated_at field as it doesn't exist in the database schema
+      // updated_at: new Date().toISOString()
+    };
+
+    // Update the record in the database
+    const { data, error } = await supabaseInstance
+      .from('psira_records')
+      .update(recordToUpdate)
+      .eq('id', existingRecord.id) // Update by primary key
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating PSIRA record:', error);
+      toast.error(`Database Error: ${error.message}`, { id: toastId });
+      return null;
+    }
+
+    toast.success('PSIRA record updated successfully!', { id: toastId });
+    return data as Contract;
+
+  } catch (error) {
+    console.error('PSIRA update operation failed:', error);
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    toast.error(`Update Error: ${message}`, { id: toastId });
     return null;
   }
 }; 

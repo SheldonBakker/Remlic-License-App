@@ -3,61 +3,52 @@ import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
-import { Typography } from "@mui/material";
+import { Typography } from '@mui/material';
 import SuccessModal from '../dashboard/SuccessModal';
-import useLicenseLimit, { checkLicenseLimit } from '../../hooks/useLicenseLimit';
 
-interface DriverLicenseFormProps {
+interface CompetencyLicenseFormProps {
   onClose: () => void;
   editingLicense?: any;
 }
 
-const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingLicense }) => {
+// Define the competency firearm options
+const FIREARM_TYPE_OPTIONS = [
+  'Shotgun & Hand Machine Carbine',
+  'Rifle & Shotgun & Hand Machine Carbine',
+  'Rifle & Hand Machine Carbine',
+  'Handgun & Rifle & Shotgun & Hand Machine Carbine',
+  'Handgun & Rifle & Hand Machine Carbine',
+  'Handgun & Hand Machine Carbine',
+  'Hand Machine Carbine',
+  'Handgun & Rifle & Shotgun',
+  'Rifle & Shotgun',
+  'Shotgun & Handgun',
+  'Shotgun',
+  'Rifle',
+  'Handgun & Rifle',
+  'Handgun'
+];
+
+const CompetencyLicenseForm: React.FC<CompetencyLicenseFormProps> = ({ onClose, editingLicense }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [formData, setFormData] = useState({
     firstName: editingLicense?.first_name || '',
     lastName: editingLicense?.last_name || '',
     idNumber: editingLicense?.id_number || '',
+    firearmType: editingLicense?.firearm_type || '',
     expiryDate: editingLicense?.expiry_date || ''
   });
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
-  // Use the license limit hook to check if the user can add a new license
-  // Skip the check if we're editing an existing license
-  const { canAdd, currentCount, limit, isLoading: isCheckingLimit } = useLicenseLimit(
-    'drivers', 
-    !!editingLicense // Skip check if editing
-  );
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // If adding a new license (not editing), enforce license limit
-    if (!editingLicense && !canAdd) {
-      toast.error(`License limit reached. Your current plan allows ${limit} driver's licenses.`);
-      return;
-    }
-    
     setIsLoading(true);
 
     try {
-      const supabaseInstance = await supabase;
-      const { data: { session } } = await supabaseInstance.auth.getSession();
-      
+      const { data: { session } } = await (await supabase).auth.getSession();
       if (!session) {
         toast.error('Please login to continue');
-        setIsLoading(false);
         return;
-      }
-
-      // Double-check the license limit on the server-side to prevent bypassing limits
-      if (!editingLicense) {
-        const limitCheck = await checkLicenseLimit('drivers', session.user.id);
-        if (!limitCheck.canAdd) {
-          toast.error(`License limit reached. Your current plan allows ${limitCheck.limit} driver's licenses.`);
-          setIsLoading(false);
-          return;
-        }
       }
 
       const licenseData = {
@@ -65,18 +56,19 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
         first_name: formData.firstName,
         last_name: formData.lastName,
         id_number: formData.idNumber,
+        firearm_type: formData.firearmType,
         expiry_date: formData.expiryDate
       };
 
       let error;
       if (editingLicense) {
-        ({ error } = await supabaseInstance
-          .from('drivers')
+        ({ error } = await (await supabase)
+          .from('competency')
           .update(licenseData)
           .eq('id', editingLicense.id));
       } else {
-        ({ error } = await supabaseInstance
-          .from('drivers')
+        ({ error } = await (await supabase)
+          .from('competency')
           .insert([licenseData]));
       }
 
@@ -88,22 +80,7 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
     } finally {
       setIsLoading(false);
     }
-  }, [formData, editingLicense, canAdd, limit]);
-
-  // Show license limit information for new licenses
-  const renderLimitInfo = () => {
-    if (editingLicense || isCheckingLimit) return null;
-    
-    return (
-      <div className={`mt-4 p-3 rounded-lg text-sm ${canAdd 
-        ? "bg-green-500/10 border border-green-500/20 text-green-300"
-        : "bg-red-500/10 border border-red-500/20 text-red-300"}`}>
-        {canAdd 
-          ? `You can add ${limit - currentCount} more driver's license${limit - currentCount !== 1 ? 's' : ''}.` 
-          : `License limit reached (${currentCount}/${limit}). Please upgrade your plan to add more licenses.`}
-      </div>
-    );
-  };
+  }, [formData, editingLicense]);
 
   return (
     <>
@@ -116,15 +93,12 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
             className="text-2xl sm:text-3xl text-white font-bold mb-2 bg-gradient-to-r from-white to-white/70 
               bg-clip-text text-transparent"
           >
-            Driver License Information
+            Competency Certificate Information
           </Typography>
           <Typography variant="body1" className="text-white/60 text-base">
-            Please fill in your driver's license details below
+            Please fill in your firearm competency certificate details below
           </Typography>
         </div>
-
-        {/* Show license limit information */}
-        {renderLimitInfo()}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,6 +114,7 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
                   focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 
                   transition-all duration-200 backdrop-blur-2xl outline-none
                   shadow-md shadow-black/10 hover:border-indigo-400/50"
+                maxLength={100}
                 required
               />
             </div>
@@ -156,6 +131,7 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
                   focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 
                   transition-all duration-200 backdrop-blur-2xl outline-none
                   shadow-md shadow-black/10 hover:border-indigo-400/50"
+                maxLength={100}
                 required
               />
             </div>
@@ -172,11 +148,34 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
                   focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 
                   transition-all duration-200 backdrop-blur-2xl outline-none
                   shadow-md shadow-black/10 hover:border-indigo-400/50"
+                maxLength={13}
                 required
               />
             </div>
 
             <div className="space-y-1.5">
+              <label className="block text-white/80 text-sm font-semibold mb-1 tracking-wide">
+                Firearm Type
+              </label>
+              <select
+                value={formData.firearmType}
+                onChange={(e) => setFormData(prev => ({ ...prev, firearmType: e.target.value }))}
+                className="w-full p-3 bg-[#1f2937]/60 border border-indigo-500/30 rounded-lg text-white 
+                  focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 
+                  transition-all duration-200 backdrop-blur-2xl outline-none
+                  shadow-md shadow-black/10 hover:border-indigo-400/50"
+                required
+              >
+                <option value="">Select Firearm Type</option>
+                {FIREARM_TYPE_OPTIONS.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
               <label className="block text-white/80 text-sm font-semibold mb-1 tracking-wide">
                 Expiry Date
               </label>
@@ -222,7 +221,7 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
             </button>
             <button
               type="submit"
-              disabled={isLoading || (!editingLicense && !canAdd)}
+              disabled={isLoading}
               className="w-full sm:w-auto sm:min-w-[160px] bg-gradient-to-r from-purple-600 to-indigo-600 
                 hover:from-purple-500 hover:to-indigo-500 text-white py-3 px-6 
                 rounded-lg transition-all duration-300 border border-white/20
@@ -230,16 +229,16 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
                 disabled:opacity-50 disabled:cursor-not-allowed
                 backdrop-blur-xl"
             >
-              {isLoading ? 'Saving...' : (editingLicense ? 'Update License' : 'Save License Details')}
+              {isLoading ? 'Saving...' : (editingLicense ? 'Update Certificate' : 'Save Certificate Details')}
             </button>
           </div>
         </form>
       </div>
-
+      
       {showSuccessModal && (
         <SuccessModal
           title="Success!"
-          message={`Driver's license ${editingLicense ? 'updated' : 'added'} successfully`}
+          message={`Competency Certificate ${editingLicense ? 'updated' : 'added'} successfully`}
           onClose={() => {
             setShowSuccessModal(false);
             onClose();
@@ -250,4 +249,4 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
   );
 };
 
-export default DriverLicenseForm;
+export default CompetencyLicenseForm; 

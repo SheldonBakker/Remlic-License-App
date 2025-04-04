@@ -127,6 +127,18 @@ export const LICENSE_TYPES: Record<string, LicenseTypeInfo> = {
       bg: 'bg-gray-500/10',
       gradient: 'from-gray-400'
     }
+  },
+  competency: { 
+    name: 'Competency', 
+    icon: GiPistolGun, 
+    color: 'pink', 
+    table: 'competency',
+    tailwindClass: {
+      text: 'text-pink-400',
+      hover: 'group-hover:text-pink-300',
+      bg: 'bg-pink-500/10',
+      gradient: 'from-pink-400'
+    }
   }
 };
 
@@ -140,7 +152,8 @@ export const TIER_LIMITS: { [key: string]: { [key: string]: number } } = {
     passports: 1,
     tvlicenses: 1,
     psira: 1,
-    others: 1
+    others: 1,
+    competency: 1
   },
   premium: {
     vehicles: Infinity,
@@ -151,7 +164,8 @@ export const TIER_LIMITS: { [key: string]: { [key: string]: number } } = {
     passports: Infinity,
     tvlicenses: Infinity,
     psira: Infinity,
-    others: Infinity
+    others: Infinity,
+    competency: Infinity
   }
 };
 
@@ -196,6 +210,14 @@ export const LICENSE_TYPES_ARRAY: Array<{
     table: 'firearms'
   },
   {
+    id: 'competency',
+    title: 'Competency Certificate',
+    description: "Track firearm competency certificate renewals",
+    icon: GiPistolGun,
+    fields: ["First Name", "Last Name", "ID Number", "Firearm Type", "Expiry Date"],
+    table: 'competency'
+  },
+  {
     id: 'works',
     title: 'Work Contract',
     description: "Monitor work contract expiry dates",
@@ -237,11 +259,77 @@ export const LICENSE_TYPES_ARRAY: Array<{
   }
 ] as const;
 
-export const TIER_LICENSE_LIMITS: Record<string, number> = {
-  basic: 2,
-  standard: 5,
-  professional: 8,
-  advanced: 10,
-  premium: Number.MAX_SAFE_INTEGER,
-
+export const TIER_LICENSE_LIMITS: Record<string, { [key: string]: number }> = {
+  free: {
+    vehicles: 1,
+    drivers: 1,
+    firearms: 1,
+    prpds: 1,
+    works: 1,
+    passports: 1,
+    tvlicenses: 1,
+    psira: 1,
+    others: 1,
+    competency: 1
+  },
+  basic: {
+    vehicles: 2,
+    drivers: 2,
+    firearms: 2,
+    prpds: 2,
+    works: 2,
+    passports: 2,
+    tvlicenses: 2,
+    psira: 2,
+    others: 2,
+    competency: 2
+  },
+  standard: {
+    vehicles: 5,
+    drivers: 5,
+    firearms: 5,
+    prpds: 5,
+    works: 5,
+    passports: 5,
+    tvlicenses: 5,
+    psira: 5,
+    others: 5,
+    competency: 5
+  },
+  professional: {
+    vehicles: 8,
+    drivers: 8,
+    firearms: 8,
+    prpds: 8,
+    works: 8,
+    passports: 8,
+    tvlicenses: 8,
+    psira: 8,
+    others: 8,
+    competency: 8
+  },
+  advanced: {
+    vehicles: 10,
+    drivers: 10,
+    firearms: 10,
+    prpds: 10,
+    works: 10,
+    passports: 10,
+    tvlicenses: 10,
+    psira: 10,
+    others: 10,
+    competency: 10
+  },
+  premium: {
+    vehicles: Infinity,
+    drivers: Infinity,
+    firearms: Infinity,
+    prpds: Infinity,
+    works: Infinity,
+    passports: Infinity,
+    tvlicenses: Infinity,
+    psira: Infinity,
+    others: Infinity,
+    competency: Infinity
+  }
 }; 

@@ -10,6 +10,7 @@ import WorksLicenseForm from '../Forms/WorksLicenseForm';
 import PassportForm from '../Forms/PassportForm';
 import TVLicenseForm from '../Forms/TVLicenseForm';
 import OtherDocumentsForm from '../Forms/OtherDocumentsForm';
+import CompetencyLicenseForm from '../Forms/CompetencyLicenseForm';
 
 interface LicenseFormModalProps {
   open: boolean;
@@ -32,6 +33,8 @@ export const LicenseFormModal: React.FC<LicenseFormModalProps> = ({
         return <VehicleLicenseForm onClose={onClose} editingLicense={editingLicense} />;
       case 'firearms':
         return <FirearmsLicenseForm onClose={onClose} editingLicense={editingLicense} />;
+      case 'competency':
+        return <CompetencyLicenseForm onClose={onClose} editingLicense={editingLicense} />;
       case 'prpd':
         return <PRPDLicenseForm onClose={onClose} editingLicense={editingLicense} />;
       case 'works':
@@ -61,6 +64,8 @@ export const LicenseFormModal: React.FC<LicenseFormModalProps> = ({
         return 'TV License';
       case 'others':
         return 'Other Document';
+      case 'competency':
+        return 'Competency Certificate';
       default:
         return `${formattedType} License`;
     }

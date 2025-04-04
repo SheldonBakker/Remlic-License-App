@@ -12,6 +12,7 @@ import WorksLicenseForm from '../Forms/WorksLicenseForm';
 import PassportForm from '../Forms/PassportForm';
 import TVLicenseForm from '../Forms/TVLicenseForm';
 import OtherDocumentsForm from '../Forms/OtherDocumentsForm';
+import CompetencyLicenseForm from '../Forms/CompetencyLicenseForm';
 import CustomScrollbar from '../common/CustomScrollbar';
 import { PsiraSearchModal } from './PsiraSearchModal';
 
@@ -43,13 +44,22 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
     }
 
     const currentCount = currentLicenses[typeId as keyof LicenseGroup]?.length ?? 0;
-    const tierKey = userTier === 'premium' ? 'premium' : 'free';
-    const tierLimits = TIER_LICENSE_LIMITS[tierKey] || {};
+    
+    // Handle admin tier specially - give unlimited access
+    if (userTier === 'admin') {
+      console.log('Admin user, setting unlimited licenses');
+      setSelectedType(typeId);
+      return;
+    }
+    
+    // For other tiers, check appropriate limits
+    const tierKey = userTier || 'free';
+    const tierLimits = TIER_LICENSE_LIMITS[tierKey] || TIER_LICENSE_LIMITS.free;
     
     let effectiveLimit = 0;
     if (tierLimits && typeof tierLimits === 'object' && typeId in tierLimits) {
-        const limitForType = tierLimits[typeId as keyof typeof tierLimits];
-        effectiveLimit = typeof limitForType === 'number' ? limitForType : 0;
+      const limitForType = tierLimits[typeId as keyof typeof tierLimits];
+      effectiveLimit = typeof limitForType === 'number' ? limitForType : 0;
     }
 
     if (currentCount >= effectiveLimit) {
@@ -86,6 +96,8 @@ export const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
         return <VehicleLicenseForm onClose={handleFormSubmitSuccess} />;
       case 'firearms':
         return <FirearmsLicenseForm onClose={handleFormSubmitSuccess} />;
+      case 'competency':
+        return <CompetencyLicenseForm onClose={handleFormSubmitSuccess} />;
       case 'prpds':
         return <PRPDLicenseForm onClose={handleFormSubmitSuccess} />;
       case 'works':

@@ -33,10 +33,8 @@ interface Config {
 }
 
 const fetchConfig = async (): Promise<Config> => {
-  // Check if running in development mode (Vite uses import.meta.env)
-  const isDevelopment = import.meta.env.DEV;
-
-  if (isDevelopment) {
+  // Check if running in development mode
+  if (import.meta.env.DEV) {
     try {
       // In development mode, use environment variables
       return {
@@ -58,14 +56,37 @@ const fetchConfig = async (): Promise<Config> => {
       throw new Error('Could not load configuration from environment variables');
     }
   } else {
-    // In production, use the API endpoint
+    // In production, use the PHP endpoint
     try {
       const response = await fetch('/api/get-config.php');
       if (!response.ok) throw new Error('Failed to fetch config from API');
-      return await response.json();
+      
+      const data = await response.json();
+      
+      // Validate that we have all required fields
+      const requiredFields = [
+        'PAYSTACK_PUBLIC_KEY',
+        'PAYSTACK_TIER1_PLAN_CODE',
+        'PAYSTACK_TIER2_PLAN_CODE',
+        'PAYSTACK_TIER3_PLAN_CODE',
+        'PAYSTACK_TIER4_PLAN_CODE',
+        'PAYSTACK_PREMIUM_PLAN_CODE',
+        'PAYSTACK_TIER1_MONTHLY_PLAN_CODE',
+        'PAYSTACK_TIER2_MONTHLY_PLAN_CODE',
+        'PAYSTACK_TIER3_MONTHLY_PLAN_CODE', 
+        'PAYSTACK_TIER4_MONTHLY_PLAN_CODE',
+        'PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE'
+      ];
+      
+      const missingFields = requiredFields.filter(field => !data[field]);
+      if (missingFields.length > 0) {
+        throw new Error(`Missing configuration fields: ${missingFields.join(', ')}`);
+      }
+      
+      return data;
     } catch (error) {
       console.error('Failed to load config from API:', error);
-      toast.error('Failed to load configuration from server');
+      toast.error('Failed to load payment configuration from server');
       throw error;
     }
   }
@@ -91,7 +112,7 @@ const Price = () => {
         monthlyPrice: "50",
         licenses: TIER_LICENSE_LIMITS.basic,
         highlight: false,
-        features: [`${TIER_LICENSE_LIMITS.basic} licenses per category`],
+        features: [`2 licenses per category`],
       },
       {
         name: "Tier 2",
@@ -100,7 +121,7 @@ const Price = () => {
         monthlyPrice: "80",
         licenses: TIER_LICENSE_LIMITS.standard,
         highlight: false,
-        features: [`${TIER_LICENSE_LIMITS.standard} licenses per category`],
+        features: [`5 licenses per category`],
       },
       {
         name: "Tier 3",
@@ -109,7 +130,7 @@ const Price = () => {
         monthlyPrice: "100",
         licenses: TIER_LICENSE_LIMITS.professional,
         highlight: false,
-        features: [`${TIER_LICENSE_LIMITS.professional} licenses per category`],
+        features: [`8 licenses per category`],
       },
       {
         name: "Tier 4",
@@ -118,7 +139,7 @@ const Price = () => {
         monthlyPrice: "200",
         licenses: TIER_LICENSE_LIMITS.advanced,
         highlight: true,
-        features: [`${TIER_LICENSE_LIMITS.advanced} licenses per category`],
+        features: [`10 licenses per category`],
       },
       {
         name: "Tier 5",

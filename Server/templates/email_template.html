@@ -1,0 +1,228 @@
+<!-- templates/email_template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.5;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            background-image: 
+                linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zM22.344 0L13.858 8.485 15.272 9.9l7.9-7.9h-.828zm5.656 0L19.515 8.485 20.93 9.9l8.485-8.485h-1.414zM3.515 0L0 3.515 1.414 4.93 4.93 1.414 3.515 0zm0 0L0 3.515 1.414 4.93 4.93 1.414 3.515 0zm0 0L0 3.515 1.414 4.93 4.93 1.414 3.515 0zm0 0L0 3.515 1.414 4.93 4.93 1.414 3.515 0zm0 0L0 3.515 1.414 4.93 4.93 1.414 3.515 0z' fill='%23818cf8' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 32px;
+            background-color: rgba(31, 41, 55, 0.3);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h2 {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin: 0 0 16px 0;
+        }
+
+        .content {
+            background-color: rgba(31, 41, 55, 0.3);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .license-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .license-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon {
+            font-size: 24px;
+            min-width: 32px;
+            text-align: center;
+            background: rgba(99, 102, 241, 0.1);
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .license-details {
+            flex: 1;
+        }
+
+        .expiry-date {
+            color: #818cf8;
+            font-weight: 500;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .section-title {
+            color: #ffffff;
+            font-size: 18px;
+            margin: 24px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .license-item.paused {
+            border-left: 4px solid #818cf8;
+        }
+
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 24px;
+            background-color: rgba(31, 41, 55, 0.3);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-top: 32px;
+        }
+
+        .badge {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 16px;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="badge">License Alert</span>
+            <h2>RemLic License Expiry Alert</h2>
+            <p>Hello {{ user.first_name }} {{ user.last_name }},</p>
+        </div>
+
+        <div class="content">
+            <p>The following licenses/documents are nearing their expiry date:</p>
+            {% for license_item in expiring_licenses %}
+                <div class="license-item">
+                    <div class="icon">
+                        {% if 'registration_number' in license_item and 'make' in license_item %}
+                            🚗
+                        {% elif 'id_number' in license_item and 'caliber' not in license_item %}
+                            {% if 'drivers' in license_item['table'] %}🪪{% else %}📇{% endif %}
+                        {% elif 'caliber' in license_item %}
+                            🎯
+                        {% elif 'contract_name' in license_item %}
+                            💼
+                        {% else %}
+                            📄
+                        {% endif %}
+                    </div>
+                    <div class="license-details">
+                        {% if 'registration_number' in license_item and 'make' in license_item %}
+                            <strong>Vehicle License:</strong> {{ license_item['make'] }} {{ license_item['model'] }} ({{ license_item['registration_number'] }})
+                        {% elif 'id_number' in license_item and 'caliber' not in license_item %}
+                            <strong>{% if 'drivers' in license_item['table'] %}Driver{% else %}PRPD{% endif %} License:</strong> {{ license_item['first_name'] }} {{ license_item['last_name'] }}
+                        {% elif 'caliber' in license_item %}
+                            <strong>Firearm License:</strong> {{ license_item['make_model'] }} ({{ license_item['registration_number'] }})
+                        {% elif 'contract_name' in license_item %}
+                            <strong>Work Contract:</strong> {{ license_item['contract_name'] }} with {{ license_item['company_name'] }}
+                        {% else %}
+                            <strong>{{ license_item.get('description', 'Unnamed Document') }}</strong>
+                        {% endif %}
+                        <br>
+                        <span class="expiry-date">Expires on {{ license_item['expiry_date'] }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+
+            {% if paused_licenses %}
+                <h3 class="section-title">Licenses with Paused Notifications</h3>
+                {% for license_item in paused_licenses %}
+                    <div class="license-item paused">
+                        <div class="icon">
+                            {% if 'registration_number' in license_item and 'make' in license_item %}
+                                🚗
+                            {% elif 'id_number' in license_item and 'caliber' not in license_item %}
+                                {% if 'drivers' in license_item['table'] %}🪪{% else %}📇{% endif %}
+                            {% elif 'caliber' in license_item %}
+                                🎯
+                            {% elif 'contract_name' in license_item %}
+                                💼
+                            {% else %}
+                                📄
+                            {% endif %}
+                        </div>
+                        <div class="license-details">
+                            {% if 'registration_number' in license_item and 'make' in license_item %}
+                                <strong>Vehicle License:</strong> {{ license_item['make'] }} {{ license_item['model'] }} ({{ license_item['registration_number'] }})
+                            {% elif 'id_number' in license_item and 'caliber' not in license_item %}
+                                <strong>{% if 'drivers' in license_item['table'] %}Driver{% else %}PRPD{% endif %} License:</strong> {{ license_item['first_name'] }} {{ license_item['last_name'] }}
+                            {% elif 'caliber' in license_item %}
+                                <strong>Firearm License:</strong> {{ license_item['make_model'] }} ({{ license_item['registration_number'] }})
+                            {% elif 'contract_name' in license_item %}
+                                <strong>Work Contract:</strong> {{ license_item['contract_name'] }} with {{ license_item['company_name'] }}
+                            {% else %}
+                                <strong>{{ license_item.get('description', 'Unnamed Document') }}</strong>
+                            {% endif %}
+                            <br>
+                            <span class="expiry-date">Expires on {{ license_item['expiry_date'] }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <p>Please take the necessary actions to renew them.</p>
+            <p>Best regards,<br>RemLic Support Team</p>
+        </div>
+    </div>
+</body>
+</html>

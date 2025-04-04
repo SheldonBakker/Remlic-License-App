@@ -35,6 +35,7 @@ export interface LicenseGroup {
   passports: Contract[];
   tvlicenses: Contract[];
   psira: Contract[];
+  competency: Contract[];
 }
 
 export type LicenseType =
@@ -46,12 +47,13 @@ export type LicenseType =
   | "others"
   | "passports"
   | "tvlicenses"
-  | "psira"; // Add psira here
+  | "psira"
+  | "competency";
 
 export interface License {
   id: string;
-  // Update type union to include psira
-  type: 'vehicles' | 'drivers' | 'firearms' | 'prpd' | 'works' | 'other_documents' | 'passports' | 'tvlicenses' | 'psira';
+  // Update type union to include competency
+  type: 'vehicles' | 'drivers' | 'firearms' | 'prpd' | 'works' | 'other_documents' | 'passports' | 'tvlicenses' | 'psira' | 'competency';
   first_name?: string;
   last_name?: string;
   id_number?: string | null;
@@ -73,4 +75,7 @@ export interface License {
   certificate_expiry_date?: string | null; // From ExpiryDate
   grade?: string | null;                 // From Grade
   special_courses?: string | null;       // From SpecialGrade
+  
+  // Add Competency-specific field
+  firearm_type?: string | null;         // For competency firearm type
 }

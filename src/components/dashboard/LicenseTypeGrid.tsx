@@ -97,8 +97,23 @@ export const LicenseTypeGrid = React.memo<LicenseTypeGridProps>(({
         const type = licenseType.id as keyof LicenseGroup;
         const items = licenses[type] || [];
         
-        const tierKey = userTier === 'premium' ? 'premium' : 'free';
-        const tierLimits = TIER_LICENSE_LIMITS[tierKey] || {};
+        // Admin users get unlimited licenses
+        if (userTier === 'admin') {
+          return (
+            <LicenseCard
+              key={type}
+              licenseType={licenseType}
+              items={items}
+              limit={Infinity}
+              isSelected={selectedSection === type}
+              onSelect={() => onSectionSelect(type)}
+            />
+          );
+        }
+        
+        // For other tiers, check the appropriate limits
+        const tierKey = userTier || 'free';
+        const tierLimits = TIER_LICENSE_LIMITS[tierKey] || TIER_LICENSE_LIMITS.free;
         
         let effectiveLimit = Infinity;
         

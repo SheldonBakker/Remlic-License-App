@@ -54,7 +54,8 @@ export const Pause: React.FC<PauseProps> = ({
         passports: 'passports',
         tvlicenses: 'tv_licenses',
         others: 'other_documents',
-        psira: 'psira_records'
+        psira: 'psira_records',
+        competency: 'competency'
       };
       
       const tableName = tableMapping[licenseType];
