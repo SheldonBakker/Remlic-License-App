@@ -110,7 +110,7 @@ serve(async (req: Request) => {
     // Simple comparison for now - refine based on Paystack spec
     if (signature !== calculatedSignature) { // Adjust comparison if needed
        console.error('Webhook signature verification failed.');
-       // return new Response('Invalid signature', { status: 401 });
+       return new Response('Invalid signature', { status: 401 });
        console.warn('Signature verification bypassed temporarily for testing.'); // TEMP
     } else {
        console.log('Webhook signature verified successfully.');
