@@ -38,6 +38,21 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
       return;
     }
     
+    // Validate expiry date format
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!datePattern.test(formData.expiryDate)) {
+      toast.error('Please enter a complete date in YYYY-MM-DD format');
+      return;
+    }
+    
+    // Validate that the date is valid and in the future
+    const expiryDate = new Date(formData.expiryDate);
+    
+    if (isNaN(expiryDate.getTime())) {
+      toast.error('Please enter a valid date');
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -65,7 +80,9 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
         first_name: formData.firstName,
         last_name: formData.lastName,
         id_number: formData.idNumber,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true,
+        created_at: editingLicense?.created_at || new Date().toISOString()
       };
 
       let error;
@@ -75,9 +92,16 @@ const DriverLicenseForm: React.FC<DriverLicenseFormProps> = ({ onClose, editingL
           .update(licenseData)
           .eq('id', editingLicense.id));
       } else {
-        ({ error } = await supabaseInstance
+        // Add better error logging
+        console.log('Attempting to insert driver with data:', licenseData);
+        const result = await supabaseInstance
           .from('drivers')
-          .insert([licenseData]));
+          .insert([licenseData]);
+        
+        error = result.error;
+        if (error) {
+          console.error('Detailed Supabase error:', JSON.stringify(error, null, 2));
+        }
       }
 
       if (error) throw error;

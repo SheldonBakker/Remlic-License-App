@@ -37,7 +37,8 @@ const PassportForm: React.FC<PassportFormProps> = ({ onClose, editingLicense }) 
         first_name: formData.firstName,
         last_name: formData.lastName,
         passport_number: formData.passportNumber,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true
       };
 
       let error;

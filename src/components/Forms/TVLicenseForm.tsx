@@ -37,7 +37,8 @@ const TVLicenseForm: React.FC<TVLicenseFormProps> = ({ onClose, editingLicense }
         first_name: formData.firstName,
         last_name: formData.lastName,
         license_number: formData.licenseNumber,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true
       };
 
       let error;

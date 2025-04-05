@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { updatePsiraRecordByPsiraNumber } from '../../lib/psiraApi';
 
 interface ContractCardProps {
-  contract: Contract & { notifications_paused?: boolean };
+  contract: Contract & { notifications_paused?: boolean; whatsapp_notifications_enabled?: boolean };
   type: string;
   onRenew: (contract: Contract) => void;
   onDelete: (contract: Contract) => void;
@@ -34,6 +34,10 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
   const [isUpdating, setIsUpdating] = React.useState(false);
 
   const handlePauseToggle = () => {
+    onRefresh();
+  };
+
+  const handleWhatsAppToggle = () => {
     onRefresh();
   };
 
@@ -284,13 +288,15 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
 
         <div className="flex justify-between items-center pt-2">
           <div className="flex gap-1.5">
-            <button
-              onClick={() => onRenew(contract)}
-              className="p-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors"
-              title="Renew"
-            >
-              <FiRefreshCw className="w-4 h-4" />
-            </button>
+            {type !== 'psira' && (
+              <button
+                onClick={() => onRenew(contract)}
+                className="p-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors"
+                title="Renew"
+              >
+                <FiRefreshCw className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => onDelete(contract)}
               className="p-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
@@ -305,6 +311,9 @@ export const ContractCard: React.FC<ContractCardProps> = ({ contract, type, onRe
             onTogglePause={handlePauseToggle}
             licenseId={contract.id}
             licenseType={type as LicenseType}
+            isWhatsappEnabled={contract.whatsapp_notifications_enabled || false}
+            onToggleWhatsapp={handleWhatsAppToggle}
+            className=""
           />
         </div>
       </div>

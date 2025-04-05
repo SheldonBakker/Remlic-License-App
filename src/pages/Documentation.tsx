@@ -22,6 +22,8 @@ import { LICENSE_TYPES } from '../constants/licenses';
 import { Link } from 'react-router-dom';
 
 const Documentation = () => {
+  const [subscriptionType, setSubscriptionType] = React.useState<'monthly' | 'annual'>('annual');
+
   const licenseTypes = Object.entries(LICENSE_TYPES).map(([id, type]) => ({
     id,
     title: type.name,
@@ -67,31 +69,36 @@ const Documentation = () => {
     {
       id: "basic",
       title: "Tier 1",
-      price: "R550/year or R50/month",
+      price: "550",
+      monthlyPrice: "50",
       features: ["2 Licenses per category"],
     },
     {
       id: "standard",
       title: "Tier 2",
-      price: "R900/year or R80/month",
+      price: "900",
+      monthlyPrice: "80",
       features: ["5 Licenses per category"],
     },
     {
       id: "professional",
       title: "Tier 3",
-      price: "R1000/year or R100/month",
+      price: "1000",
+      monthlyPrice: "100",
       features: ["8 Licenses per category"],
     },
     {
       id: "advanced",
       title: "Tier 4",
-      price: "R2100/year or R200/month",
+      price: "2100",
+      monthlyPrice: "200",
       features: ["10 Licenses per category", "Priority support"],
     },
     {
       id: "premium",
       title: "Tier 5",
-      price: "R4000/year or R350/month",
+      price: "4000",
+      monthlyPrice: "350",
       features: ["Unlimited licenses per category", "Priority support", "API access"],
     },
   ];
@@ -335,17 +342,29 @@ const Documentation = () => {
               <p className="text-white/70 max-w-2xl mx-auto">Choose the perfect plan for your license management needs, with flexible pricing options for businesses of all sizes</p>
             </div>
             
-            {/* Billing Toggle */}
+            {/* Interactive Billing Toggle */}
             <div className="flex justify-center mb-8">
-              <div className="inline-flex rounded-lg bg-slate-800/80 p-1 backdrop-blur-sm">
-                <div className="flex items-center space-x-3">
-                  <span className="rounded-md bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm">
-                    Annual
-                  </span>
-                  <span className="px-4 py-2 text-sm font-medium text-white/70">
-                    Monthly
-                  </span>
-                </div>
+              <div className="inline-flex rounded-lg bg-gray-800 p-1 backdrop-blur-sm">
+                <button
+                  onClick={() => setSubscriptionType('annual')}
+                  className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                    subscriptionType === 'annual'
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'bg-transparent text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Annual
+                </button>
+                <button
+                  onClick={() => setSubscriptionType('monthly')}
+                  className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                    subscriptionType === 'monthly'
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'bg-transparent text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Monthly
+                </button>
               </div>
             </div>
             
@@ -374,21 +393,21 @@ const Documentation = () => {
                         {tier.title}
                       </h3>
                       
-                      {/* Price Display */}
-                      <div className="flex flex-col items-center">
+                      {/* Updated Price Display */}
+                      <div className="flex flex-col items-center mb-6">
                         <div className="flex items-baseline">
-                          <span className="text-3xl font-extrabold text-white">
-                            {tier.price.split('/')[0]}
+                          <span className="text-4xl font-extrabold text-white">
+                            R{subscriptionType === 'annual' ? tier.price : tier.monthlyPrice}
                           </span>
-                          <span className="text-white/50 ml-1 text-sm">
-                            /year
+                          <span className="text-white/50 ml-2 text-sm">
+                            /{subscriptionType === 'annual' ? 'year' : 'month'}
                           </span>
                         </div>
-                        <div className={`text-xs mt-1 ${
-                          tier.id === 'premium' ? 'text-amber-300/80' : 'text-indigo-400/80'
-                        }`}>
-                          or {tier.price.split('or ')[1]}
-                        </div>
+                        {subscriptionType === 'annual' && (
+                          <div className="text-green-400 text-xs mt-1">
+                            Save R{(Number(tier.monthlyPrice) * 12 - Number(tier.price)).toFixed(0)} with annual plan
+                          </div>
+                        )}
                       </div>
                     </div>
                     

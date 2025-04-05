@@ -9,6 +9,7 @@ export interface Contract {
   created_at: string;
   [key: string]: any;  // For additional properties
   notifications_paused?: boolean;
+  whatsapp_notifications_enabled?: boolean;
   // Remove PSIRA fields from Contract if License interface is more specific
   /*
   psira_number?: string | null;

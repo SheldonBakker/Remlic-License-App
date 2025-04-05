@@ -41,7 +41,8 @@ const FirearmsLicenseForm: React.FC<FirearmsLicenseFormProps> = ({ onClose, edit
         make_model: formData.makeModel,
         caliber: formData.caliber,
         registration_number: formData.registrationNumber,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true
       };
 
       let error;

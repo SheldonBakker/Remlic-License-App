@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { FiBellOff, FiBell } from 'react-icons/fi';
+import { BsWhatsapp } from 'react-icons/bs';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { PauseConfirmationModal } from './PauseConfirmationModal';
@@ -11,6 +12,8 @@ interface PauseProps {
   licenseId: string;
   licenseType: LicenseType;
   className?: string;
+  isWhatsappEnabled?: boolean;
+  onToggleWhatsapp?: () => void;
 }
 
 export const Pause: React.FC<PauseProps> = ({ 
@@ -18,11 +21,15 @@ export const Pause: React.FC<PauseProps> = ({
   onTogglePause, 
   licenseId,
   licenseType,
-  className = '' 
+  className = '',
+  isWhatsappEnabled = false,
+  onToggleWhatsapp
 }) => {
   const [showConfirmModal, setShowConfirmModal] = React.useState(false);
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const [isWhatsappUpdating, setIsWhatsappUpdating] = React.useState(false);
   const [localPauseState, setLocalPauseState] = React.useState(initialIsPaused);
+  const [localWhatsappState, setLocalWhatsappState] = React.useState(isWhatsappEnabled);
   const isMounted = React.useRef(true);
 
   React.useEffect(() => {
@@ -36,6 +43,12 @@ export const Pause: React.FC<PauseProps> = ({
       setLocalPauseState(initialIsPaused);
     }
   }, [initialIsPaused, isUpdating]);
+
+  React.useEffect(() => {
+    if (!isWhatsappUpdating) {
+      setLocalWhatsappState(isWhatsappEnabled);
+    }
+  }, [isWhatsappEnabled, isWhatsappUpdating]);
 
   const updatePauseStatus = async () => {
     if (isUpdating) return;
@@ -86,6 +99,54 @@ export const Pause: React.FC<PauseProps> = ({
     }
   };
 
+  const updateWhatsappStatus = async () => {
+    if (isWhatsappUpdating || !onToggleWhatsapp) return;
+    
+    setIsWhatsappUpdating(true);
+    const newWhatsappState = !localWhatsappState;
+    
+    try {
+      const client = await supabase;
+      const tableMapping: Record<LicenseType, string> = {
+        drivers: 'drivers',
+        vehicles: 'vehicles',
+        firearms: 'firearms',
+        prpd: 'prpd',
+        works: 'works',
+        passports: 'passports',
+        tvlicenses: 'tv_licenses',
+        others: 'other_documents',
+        psira: 'psira_records',
+        competency: 'competency'
+      };
+      
+      const tableName = tableMapping[licenseType];
+      
+      if (!tableName) {
+        toast.error(`Cannot update WhatsApp status: Unknown type ${licenseType}`);
+        console.error(`Invalid license type for WhatsApp update: ${licenseType}`);
+        setIsWhatsappUpdating(false);
+        return;
+      }
+
+      const { error } = await client
+        .from(tableName)
+        .update({ whatsapp_notifications_enabled: newWhatsappState })
+        .eq('id', licenseId);
+
+      if (error) throw error;
+      
+      setLocalWhatsappState(newWhatsappState);
+      if (onToggleWhatsapp) onToggleWhatsapp();
+      toast.success(`WhatsApp notifications ${newWhatsappState ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error toggling WhatsApp status:', error);
+      toast.error('Failed to update WhatsApp notification settings');
+    } finally {
+      setIsWhatsappUpdating(false);
+    }
+  };
+
   const handleTogglePause = () => {
     if (!localPauseState) {
       setShowConfirmModal(true);
@@ -96,50 +157,94 @@ export const Pause: React.FC<PauseProps> = ({
 
   return (
     <>
-      <button
-        onClick={handleTogglePause}
-        disabled={isUpdating}
-        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg
-          ${isUpdating ? 'opacity-80 cursor-not-allowed' : ''} 
-          ${localPauseState 
-            ? 'bg-gray-500/10 text-gray-300 border-gray-500/20 hover:bg-gray-500/20' 
-            : 'bg-blue-500/10 text-blue-300 border-blue-500/20 hover:bg-blue-500/20'
-          } border shadow-lg transition-all duration-200 ${className}`}
-      >
-        {isUpdating ? (
-          <div className="flex items-center gap-2">
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-              <circle 
-                className="opacity-25" 
-                cx="12" 
-                cy="12" 
-                r="10" 
-                stroke="currentColor" 
-                strokeWidth="4"
-                fill="none"
-              />
-              <path 
-                className="opacity-75" 
-                fill="currentColor" 
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span className="font-medium">
-              {localPauseState ? 'Resuming...' : 'Pausing...'}
-            </span>
-          </div>
-        ) : localPauseState ? (
-          <>
-            <FiBellOff className="w-4 h-4" />
-            <span className="font-medium">Paused</span>
-          </>
-        ) : (
-          <>
-            <FiBell className="w-4 h-4" />
-            <span className="font-medium">Active</span>
-          </>
+      <div className="flex gap-2">
+        {onToggleWhatsapp && (
+          <button
+            onClick={updateWhatsappStatus}
+            disabled={isWhatsappUpdating}
+            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg
+              ${isWhatsappUpdating ? 'opacity-80 cursor-not-allowed' : ''} 
+              ${localWhatsappState 
+                ? 'bg-green-500/10 text-green-300 border-green-500/20 hover:bg-green-500/20' 
+                : 'bg-gray-500/10 text-gray-300 border-gray-500/20 hover:bg-gray-500/20'
+              } border shadow-lg transition-all duration-200`}
+          >
+            {isWhatsappUpdating ? (
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle 
+                    className="opacity-25" 
+                    cx="12" 
+                    cy="12" 
+                    r="10" 
+                    stroke="currentColor" 
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path 
+                    className="opacity-75" 
+                    fill="currentColor" 
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <span className="font-medium">
+                  {localWhatsappState ? 'Disabling...' : 'Enabling...'}
+                </span>
+              </div>
+            ) : (
+              <>
+                <BsWhatsapp className="w-4 h-4" />
+                <span className="font-medium">{localWhatsappState ? 'WhatsApp On' : 'WhatsApp Off'}</span>
+              </>
+            )}
+          </button>
         )}
-      </button>
+      
+        <button
+          onClick={handleTogglePause}
+          disabled={isUpdating}
+          className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg
+            ${isUpdating ? 'opacity-80 cursor-not-allowed' : ''} 
+            ${localPauseState 
+              ? 'bg-gray-500/10 text-gray-300 border-gray-500/20 hover:bg-gray-500/20' 
+              : 'bg-blue-500/10 text-blue-300 border-blue-500/20 hover:bg-blue-500/20'
+            } border shadow-lg transition-all duration-200 ${className}`}
+        >
+          {isUpdating ? (
+            <div className="flex items-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle 
+                  className="opacity-25" 
+                  cx="12" 
+                  cy="12" 
+                  r="10" 
+                  stroke="currentColor" 
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path 
+                  className="opacity-75" 
+                  fill="currentColor" 
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <span className="font-medium">
+                {localPauseState ? 'Resuming...' : 'Pausing...'}
+              </span>
+            </div>
+          ) : localPauseState ? (
+            <>
+              <FiBellOff className="w-4 h-4" />
+              <span className="font-medium">Paused</span>
+            </>
+          ) : (
+            <>
+              <FiBell className="w-4 h-4" />
+              <span className="font-medium">Active</span>
+            </>
+          )}
+        </button>
+      </div>
 
       <PauseConfirmationModal
         isOpen={showConfirmModal}

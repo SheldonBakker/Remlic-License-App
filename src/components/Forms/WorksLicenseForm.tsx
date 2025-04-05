@@ -45,7 +45,8 @@ const WorksLicenseForm: React.FC<WorksLicenseFormProps> = ({ onClose, editingLic
         last_name: formData.lastName,
         contact_number: formData.contactNumber,
         email_address: formData.emailAddress,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true
       };
 
       let error;

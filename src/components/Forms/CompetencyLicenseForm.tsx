@@ -57,7 +57,8 @@ const CompetencyLicenseForm: React.FC<CompetencyLicenseFormProps> = ({ onClose, 
         last_name: formData.lastName,
         id_number: formData.idNumber,
         firearm_type: formData.firearmType,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true
       };
 
       let error;

@@ -19,6 +19,7 @@ interface ReminderSettings {
   notifications_enabled: boolean;
   reminder_days_before: number;
   reminder_frequency: string;
+  whatsapp_notifications_enabled: boolean;
 }
 
 const ReminderSettings = () => {
@@ -48,16 +49,16 @@ const ReminderSettings = () => {
 
   // Memoize the initial type settings to avoid recreating on every render
   const initialTypeSettings = useMemo(() => ({
-    vehicles: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    drivers: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    firearms: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    prpd: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    works: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    others: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    passports: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    tvlicenses: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    psira: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" },
-    competency: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly" }
+    vehicles: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    drivers: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    firearms: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    prpd: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    works: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    others: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    passports: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    tvlicenses: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    psira: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false },
+    competency: { notifications_enabled: false, reminder_days_before: 7, reminder_frequency: "weekly", whatsapp_notifications_enabled: false }
   }), []);
 
   const [typeSettings, setTypeSettings] = useState(initialTypeSettings);
@@ -207,12 +208,14 @@ const ReminderSettings = () => {
               notifications_enabled: boolean;
               reminder_days_before: number;
               reminder_frequency: string;
+              whatsapp_notifications_enabled: boolean;
             }) => ({
               ...acc,
               [setting.type]: {
                 notifications_enabled: setting.notifications_enabled,
                 reminder_days_before: setting.reminder_days_before,
                 reminder_frequency: setting.reminder_frequency,
+                whatsapp_notifications_enabled: setting.whatsapp_notifications_enabled || false,
               },
             }),
             {}
@@ -262,6 +265,7 @@ const ReminderSettings = () => {
           notifications_enabled: typeSettings[type]?.notifications_enabled ?? true,
           reminder_days_before: daysBefore,
           reminder_frequency: frequency,
+          whatsapp_notifications_enabled: typeSettings[type]?.whatsapp_notifications_enabled ?? false,
         }, {
           onConflict: "user_id,type",
           ignoreDuplicates: false,
@@ -319,6 +323,52 @@ const ReminderSettings = () => {
       frequency
     );
   };
+
+  // Add a new function to toggle WhatsApp notifications
+  const toggleWhatsAppNotifications = useCallback(async (type: LicenseType) => {
+    if (!user?.id) {
+      toast.error("Please sign in to update settings");
+      return;
+    }
+
+    setIsUpdating(prev => ({ ...prev, [type]: true }));
+
+    try {
+      const newWhatsAppStatus = !typeSettings[type]?.whatsapp_notifications_enabled;
+      
+      const client = await supabase;
+      const { error } = await client
+        .from("license_type_settings")
+        .upsert({
+          user_id: user.id,
+          type,
+          notifications_enabled: typeSettings[type]?.notifications_enabled ?? true,
+          reminder_days_before: typeSettings[type]?.reminder_days_before ?? 7,
+          reminder_frequency: typeSettings[type]?.reminder_frequency ?? "weekly",
+          whatsapp_notifications_enabled: newWhatsAppStatus,
+        }, {
+          onConflict: "user_id,type",
+          ignoreDuplicates: false,
+        });
+
+      if (error) throw error;
+
+      setTypeSettings(prev => ({
+        ...prev,
+        [type]: {
+          ...prev[type],
+          whatsapp_notifications_enabled: newWhatsAppStatus,
+        },
+      }));
+
+      toast.success(`WhatsApp notifications ${newWhatsAppStatus ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error("Error updating WhatsApp notification settings:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update WhatsApp notification settings");
+    } finally {
+      setIsUpdating(prev => ({ ...prev, [type]: false }));
+    }
+  }, [user?.id, typeSettings]);
 
   // Update the loading spinner condition in the render
   const isLoading = Object.values(loadingStates).some(Boolean);
@@ -484,6 +534,33 @@ const ReminderSettings = () => {
                                   </option>
                                 </select>
                               </div>
+                              
+                              <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-4">
+                                <label className="text-sm font-medium text-white/70">WhatsApp notifications</label>
+                                <button
+                                  onClick={() => {
+                                    setTypeSettings((prev) => ({
+                                      ...prev,
+                                      [type as LicenseType]: {
+                                        ...prev[type as LicenseType],
+                                        whatsapp_notifications_enabled: !prev[type as LicenseType]?.whatsapp_notifications_enabled,
+                                      },
+                                    }))
+                                  }}
+                                  type="button"
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
+                                    ${typeSettings[type as LicenseType]?.whatsapp_notifications_enabled 
+                                    ? 'bg-green-500' 
+                                    : 'bg-gray-500/30'}`}
+                                >
+                                  <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200
+                                      ${typeSettings[type as LicenseType]?.whatsapp_notifications_enabled 
+                                      ? 'translate-x-6' 
+                                      : 'translate-x-1'}`}
+                                  />
+                                </button>
+                              </div>
                             </div>
                           ) : (
                             <div className="space-y-4">
@@ -497,6 +574,24 @@ const ReminderSettings = () => {
                                 {typeSettings[type as LicenseType]?.reminder_frequency ||
                                   "weekly"}
                               </p>
+                              <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-4">
+                                <label className="text-sm text-blue-200/80">WhatsApp notifications</label>
+                                <button
+                                  onClick={() => toggleWhatsAppNotifications(type as LicenseType)}
+                                  disabled={isUpdating[type as LicenseType]}
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
+                                    ${typeSettings[type as LicenseType]?.whatsapp_notifications_enabled 
+                                    ? 'bg-green-500' 
+                                    : 'bg-gray-500/30'}`}
+                                >
+                                  <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200
+                                      ${typeSettings[type as LicenseType]?.whatsapp_notifications_enabled 
+                                      ? 'translate-x-6' 
+                                      : 'translate-x-1'}`}
+                                  />
+                                </button>
+                              </div>
                             </div>
                           )}
 
@@ -538,8 +633,8 @@ const ReminderSettings = () => {
                 )}
 
               {(loadingStates.licenses || loadingStates.settings) &&
-                Array.from({ length: 6 }).map((_, index) => (
-                  <div key={`skeleton-${index}`} className="animate-pulse">
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={`skeleton-${i}`} className="animate-pulse">
                     <div className="bg-white/[0.07] rounded-2xl h-64" />
                   </div>
                 ))}

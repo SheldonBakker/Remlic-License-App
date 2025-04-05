@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -149,41 +148,27 @@ const Register = () => {
       if (error) throw error;
 
       if (authData?.user) {
-        // Create profile in profiles table
-        const { error: profileError } = await supabaseClient
-          .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              email: authData.user.email,
-              type_of_user: 'registered',
-              subscription_status: 'inactive',
-            }
-          ]);
-
-        if (profileError) throw profileError;
-
         setModalState({
           isOpen: true,
           status: "success",
           message: "Registration successful! Please check your email to confirm your account.",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error);
       
       let errorMessage = "Registration failed. Please try again later.";
 
-      if (error?.message?.toLowerCase().includes("already registered")) {
-        errorMessage = "This email is already registered. Please try logging in.";
-      } else if (error?.message?.toLowerCase().includes("rate limit")) {
-        errorMessage = "Too many attempts. Please try again later.";
-      } else if (error?.message?.toLowerCase().includes("confirmation email")) {
-        errorMessage = "Account created but there was an issue sending the confirmation email. Please contact support.";
-      } else if (error?.status === 503) {
-        errorMessage = "The service is temporarily unavailable. Please try again later.";
-      } else if (error?.message) {
-        errorMessage = error.message;
+      if (error instanceof Error) {
+        if (error.message?.toLowerCase().includes("already registered")) {
+          errorMessage = "This email is already registered. Please try logging in.";
+        } else if (error.message?.toLowerCase().includes("rate limit")) {
+          errorMessage = "Too many attempts. Please try again later.";
+        } else if (error.message?.toLowerCase().includes("confirmation email")) {
+          errorMessage = "Account created but there was an issue sending the confirmation email. Please contact support.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
       }
 
       setModalState({

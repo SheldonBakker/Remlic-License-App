@@ -33,7 +33,8 @@ const OtherDocumentsForm: React.FC<OtherDocumentsFormProps> = ({ onClose, editin
       const licenseData = {
         user_id: session.user.id,
         description: formData.description,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true
       };
 
       let error;

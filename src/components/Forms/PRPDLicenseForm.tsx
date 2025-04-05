@@ -81,7 +81,8 @@ const PRPDLicenseForm: React.FC<PRPDLicenseFormProps> = ({ onClose, editingLicen
         first_name: formData.firstName,
         last_name: formData.lastName,
         id_number: formData.idNumber,
-        expiry_date: formData.expiryDate
+        expiry_date: formData.expiryDate,
+        whatsapp_notifications_enabled: editingLicense ? (editingLicense.whatsapp_notifications_enabled || false) : true
       };
 
       let error;
