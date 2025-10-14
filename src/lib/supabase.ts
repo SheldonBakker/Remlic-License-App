@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js/dist/module'
-import type { SupabaseClient } from '@supabase/supabase-js/dist/module'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
