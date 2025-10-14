@@ -33,62 +33,45 @@ interface Config {
 }
 
 const fetchConfig = async (): Promise<Config> => {
-  // Check if running in development mode
-  if (import.meta.env.DEV) {
-    try {
-      // In development mode, use environment variables
-      return {
-        PAYSTACK_PUBLIC_KEY: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '',
-        PAYSTACK_TIER1_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER1_PLAN_CODE || '',
-        PAYSTACK_TIER2_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER2_PLAN_CODE || '',
-        PAYSTACK_TIER3_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER3_PLAN_CODE || '',
-        PAYSTACK_TIER4_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER4_PLAN_CODE || '',
-        PAYSTACK_PREMIUM_PLAN_CODE: import.meta.env.VITE_PAYSTACK_PREMIUM_PLAN_CODE || '',
-        PAYSTACK_TIER1_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER1_MONTHLY_PLAN_CODE || '',
-        PAYSTACK_TIER2_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER2_MONTHLY_PLAN_CODE || '',
-        PAYSTACK_TIER3_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER3_MONTHLY_PLAN_CODE || '',
-        PAYSTACK_TIER4_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER4_MONTHLY_PLAN_CODE || '',
-        PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE || '',
-      };
-    } catch (error) {
-      console.error('Failed to load environment variables:', error);
-      toast.error('Failed to load configuration from environment variables');
-      throw new Error('Could not load configuration from environment variables');
+  try {
+    const config = {
+      PAYSTACK_PUBLIC_KEY: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '',
+      PAYSTACK_TIER1_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER1_PLAN_CODE || '',
+      PAYSTACK_TIER2_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER2_PLAN_CODE || '',
+      PAYSTACK_TIER3_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER3_PLAN_CODE || '',
+      PAYSTACK_TIER4_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER4_PLAN_CODE || '',
+      PAYSTACK_PREMIUM_PLAN_CODE: import.meta.env.VITE_PAYSTACK_PREMIUM_PLAN_CODE || '',
+      PAYSTACK_TIER1_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER1_MONTHLY_PLAN_CODE || '',
+      PAYSTACK_TIER2_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER2_MONTHLY_PLAN_CODE || '',
+      PAYSTACK_TIER3_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER3_MONTHLY_PLAN_CODE || '',
+      PAYSTACK_TIER4_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_TIER4_MONTHLY_PLAN_CODE || '',
+      PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE: import.meta.env.VITE_PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE || '',
+    };
+
+    const requiredFields = [
+      'PAYSTACK_PUBLIC_KEY',
+      'PAYSTACK_TIER1_PLAN_CODE',
+      'PAYSTACK_TIER2_PLAN_CODE',
+      'PAYSTACK_TIER3_PLAN_CODE',
+      'PAYSTACK_TIER4_PLAN_CODE',
+      'PAYSTACK_PREMIUM_PLAN_CODE',
+      'PAYSTACK_TIER1_MONTHLY_PLAN_CODE',
+      'PAYSTACK_TIER2_MONTHLY_PLAN_CODE',
+      'PAYSTACK_TIER3_MONTHLY_PLAN_CODE',
+      'PAYSTACK_TIER4_MONTHLY_PLAN_CODE',
+      'PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE'
+    ];
+
+    const missingFields = requiredFields.filter(field => !config[field as keyof Config]);
+    if (missingFields.length > 0) {
+      throw new Error(`Missing configuration fields: ${missingFields.join(', ')}`);
     }
-  } else {
-    // In production, use the PHP endpoint
-    try {
-      const response = await fetch('/api/get-config.php');
-      if (!response.ok) throw new Error('Failed to fetch config from API');
-      
-      const data = await response.json();
-      
-      // Validate that we have all required fields
-      const requiredFields = [
-        'PAYSTACK_PUBLIC_KEY',
-        'PAYSTACK_TIER1_PLAN_CODE',
-        'PAYSTACK_TIER2_PLAN_CODE',
-        'PAYSTACK_TIER3_PLAN_CODE',
-        'PAYSTACK_TIER4_PLAN_CODE',
-        'PAYSTACK_PREMIUM_PLAN_CODE',
-        'PAYSTACK_TIER1_MONTHLY_PLAN_CODE',
-        'PAYSTACK_TIER2_MONTHLY_PLAN_CODE',
-        'PAYSTACK_TIER3_MONTHLY_PLAN_CODE', 
-        'PAYSTACK_TIER4_MONTHLY_PLAN_CODE',
-        'PAYSTACK_PREMIUM_MONTHLY_PLAN_CODE'
-      ];
-      
-      const missingFields = requiredFields.filter(field => !data[field]);
-      if (missingFields.length > 0) {
-        throw new Error(`Missing configuration fields: ${missingFields.join(', ')}`);
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Failed to load config from API:', error);
-      toast.error('Failed to load payment configuration from server');
-      throw error;
-    }
+
+    return config;
+  } catch (error) {
+    console.error('Failed to load environment variables:', error);
+    toast.error('Failed to load configuration from environment variables');
+    throw new Error('Could not load configuration from environment variables');
   }
 };
 

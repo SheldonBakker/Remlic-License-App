@@ -2,8 +2,7 @@ import { supabase } from './supabase';
 import { toast } from 'react-hot-toast';
 import { Contract } from '../types/LicenseGroup'; // Assuming Contract type includes all needed PSIRA fields
 
-// const PSIRA_API_URL = 'https://psiraapi.sortelearn.com/api/SecurityOfficer/Get_ApplicantDetails'; // Original URL
-const PSIRA_PROXY_URL = '/psira_proxy.php'; // URL for the local PHP proxy script
+const PSIRA_PROXY_URL = '/api/psira-proxy';
 
 // Interface for the raw API response structure
 interface PsiraApiResponse {
